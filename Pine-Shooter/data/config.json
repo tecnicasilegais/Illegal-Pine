@@ -1,0 +1,12 @@
+{
+  "input": {
+    "A": "RightH.txt",
+    "B": "LeftH.txt"
+  },
+  "output": {
+    "uniao": "output/union_out.txt",
+    "intersecao": "output/intersec_out.txt",
+    "diffab": "output/diffab_out.txt",
+    "diffba": "output/diffba_out.txt"
+  }
+}

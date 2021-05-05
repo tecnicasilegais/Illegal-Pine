@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/Pine_Shooter.dir/src/Poligono.cpp.o CMakeFiles/Pine_Shooter.dir/src/Ponto.cpp.o CMakeFiles/Pine_Shooter.dir/src/Temporizador.cpp.o CMakeFiles/Pine_Shooter.dir/main.cpp.o -o ../Pine_Shooter  -lglut -lGLU -lGL 
