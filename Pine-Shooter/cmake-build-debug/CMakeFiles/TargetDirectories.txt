@@ -1,3 +1,0 @@
-/home/m/repos/Illegal-Pine/Pine-Shooter/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/m/repos/Illegal-Pine/Pine-Shooter/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/m/repos/Illegal-Pine/Pine-Shooter/cmake-build-debug/CMakeFiles/Pine_Shooter.dir
