@@ -1,11 +1,6 @@
 // **********************************************************************
-// PUCRS/Escola Politecnica
-// COMPUTACAO GRAFICA
-//
-// Programa basico para criar aplicacoes 2D em OpenGL
-//
-// Marcio Sarroglia Pinho
-// pinho@pucrs.br
+// Pine Shooter
+// Eduardo Andrade e Marcelo Heredia
 // **********************************************************************
 
 
@@ -28,12 +23,10 @@ using namespace std;
 
 #ifdef __APPLE__
 #include <GLUT/glut.h>
-#include "json/json.hpp"
 #endif
 
 #ifdef __linux__
 #include <GL/glut.h>
-#include "json/json.hpp"
 #endif
 
 #include "headers/Ponto.h"
@@ -41,13 +34,12 @@ using namespace std;
 
 #include "headers/Temporizador.h"
 
-using json = nlohmann::json;
-
 Temporizador T;
 double accum_delta_t = 0;
 
 //declarando poligonos que serao utilizados
-Poligono A, B, Uniao, Intersecao, Diferenca_A_B, Diferenca_B_A;
+Poligono A;
+vector<Ponto> B, binit;
 
 //Limites logicos da area de desenho
 Ponto Min, Max;
@@ -55,10 +47,10 @@ Ponto Meio, Terco, Largura;
 
 bool desenha = false;
 
-float angulo = 0.0;
+float angle = 0.0;
+float walk = 0.0;
 
 const string f_path = "data/";
-json configs;
 
 /**
  * Le o arquivo nome e popula o poligono P
@@ -95,65 +87,36 @@ void le_poligono(const string nome, Poligono &P)
 
 }
 
-void escreve_poligono(const string nome, Poligono &pol)
-{
-    ofstream output(nome);
-    if (output.is_open())
-    {
-        output << pol.size() << endl;
-        for(auto i=0; i<pol.size(); i++){
-            Ponto pon = pol.get_vertice(i);
-            output << pon.x << " " << pon.y << endl;
-        }
-        output.close();
-    }
-    else cout << "error opening file" << nome << endl;
-
-}
-
-void escreve_poligonos()
-{
-    //escreve os 4 poligonos nos arquivos de destino pre-configurados
-    escreve_poligono(f_path + configs["output"]["uniao"].get<string>(), Uniao);
-    escreve_poligono(f_path + configs["output"]["intersecao"].get<string>(), Intersecao);
-    escreve_poligono(f_path + configs["output"]["diffab"].get<string>(), Diferenca_A_B);
-    escreve_poligono(f_path + configs["output"]["diffba"].get<string>(), Diferenca_B_A);
-}
-
-void carrega_config(string config)
-{
-    ifstream ifs(config);
-    configs = json::parse(ifs);
-}
-
 void init()
 {
-
-
     // Define a cor do fundo da tela (AZUL)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+    A.insere_vertice(Ponto(20,20));
+    A.insere_vertice(Ponto(20,25));
+    A.insere_vertice(Ponto(25,25));
+    A.insere_vertice(Ponto(22.5,22.5));
+    A.insere_vertice(Ponto(25,20));
 
-    //carrega arquivo de configurações na variavel configs
-    carrega_config(f_path + "config.json");
 
-    le_poligono(f_path + configs["input"]["A"].get<string>(), A);
+    binit.emplace_back(20,20);
+    binit.emplace_back(20,25);
+    binit.emplace_back(25,25);
+    binit.emplace_back(25,20);
+
+    B.emplace_back(20,20);
+    B.emplace_back(20,25);
+    B.emplace_back(25,25);
+    B.emplace_back(25,20);
 
     cout << "\tMinimo:";
     A.get_min().imprime();
     cout << "\tMaximo:";
     A.get_max().imprime();
 
-    le_poligono(f_path + configs["input"]["B"].get<string>(), B);
-
-    cout << "\tMinimo:";
-    B.get_min().imprime();
-    cout << "\tMaximo:";
-    B.get_max().imprime();
-
     // Atualiza os limites globais apos cada leitura
-    Min = get_min(A.get_min(), B.get_min());
-    Max = get_max(A.get_max(), B.get_max());
+    Min = Ponto(0,0) ;
+    Max = Ponto(50,50);
 
     cout << "Limites Globais" << endl;
     cout << "\tMinimo:";
@@ -166,31 +129,6 @@ void init()
     // em funcao do tamanho dos poligonos
     Largura.x = Max.x - Min.x;
     Largura.y = Max.y - Min.y;
-
-    // Calcula 1/3 da largura da janela
-    Terco = Largura;
-    const double factor = 1.0 / 3.0;
-    Terco.multiply(factor, factor, factor);
-
-    // Calcula 1/2 da largura da janela
-    Meio.x = (Max.x + Min.x) / 2;
-    Meio.y = (Max.y + Min.y) / 2;
-    Meio.z = (Max.z + Min.z) / 2;
-
-    // Encontra Pontos de interseção entre A e B
-    encontrar_intersecoes(A, B);
-
-    // Classifica arestas (dentro ou fora) entre os dois poligonos
-    vector<bool> aa, ab;
-    classifica_arestas(A, B, Min, aa, ab);
-
-
-    Intersecao = intersecao(A, B, aa, ab);
-    Uniao = uniao(A, B, aa, ab);
-    Diferenca_A_B = diferenca(A, B, aa, ab);
-    Diferenca_B_A = diferenca(B, A, ab, aa);
-
-    escreve_poligonos();
 
 }
 
@@ -208,7 +146,6 @@ void animate()
     if (accum_delta_t > 1.0 / 30) // fixa a atualizacao da tela em 30
     {
         accum_delta_t = 0;
-        //angulo+=0.05;
         glutPostRedisplay();
     }
     if (tempo_total > 5.0)
@@ -241,22 +178,26 @@ void reshape(int w, int h)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
+void CalculaPonto(Ponto p, Ponto &out) {
 
-void desenha_eixos()
-{
-    glBegin(GL_LINES);
-    //  eixo horizontal
-    glVertex2f(Min.x, Meio.y);
-    glVertex2f(Max.x, Meio.y);
-    //  eixo vertical 1
-    glVertex2f(Min.x + Terco.x, Min.y);
-    glVertex2f(Min.x + Terco.x, Max.y);
-    //  eixo vertical 2
-    glVertex2f(Min.x + 2 * Terco.x, Min.y);
-    glVertex2f(Min.x + 2 * Terco.x, Max.y);
-    glEnd();
+    GLfloat ponto_novo[4];
+    GLfloat matriz_gl[4][4];
+    int  i;
+
+    glGetFloatv(GL_MODELVIEW_MATRIX,&matriz_gl[0][0]);
+
+    for(i=0; i<4; i++) {
+        ponto_novo[i] = matriz_gl[0][i] * p.x +
+                        matriz_gl[1][i] * p.y +
+                        matriz_gl[2][i] * p.z +
+                        matriz_gl[3][i];
+    }
+    out.x = ponto_novo[0];
+    out.y = ponto_novo[1];
+    out.z = ponto_novo[2];
+
 }
-
+Ponto p1, p2;
 void display(void)
 {
 
@@ -267,61 +208,42 @@ void display(void)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    // Coloque aqui as chamadas das rotinas que desenham os objetos
-    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-    glLineWidth(1);
-    glColor3f(1, 1, 1); // R, G, B  [0..1]
-    desenha_eixos();
-
-    //Desenha os dois poligonos no canto superior esquerdo
     glPushMatrix();
-    glTranslatef(0, Meio.y, 0);
-    glScalef(0.33, 0.5, 1);
+    glTranslatef(22.5+walk, 22.5, 0);
+    glRotatef(angle, 0,0,1);
+    glTranslatef(-22.5, -22.5, 0);
     glLineWidth(2);
-    glColor3f(1, 1, 0); // R, G, B  [0..1]
+    glColor3f(0,1,0); // R, G, B  [0..1]
     A.desenha_poligono();
-    glColor3f(1, 0, 0); // R, G, B  [0..1]
-    B.desenha_poligono();
-    glPopMatrix();
 
-    // Desenha o poligono no meio, acima
-    glPushMatrix();
-    glTranslatef(Terco.x, Meio.y, 0);
-    glScalef(0.33, 0.5, 1);
-    glLineWidth(2);
-    glColor3f(1, 1, 0); // R, G, B  [0..1]
-    Uniao.desenha_poligono();
-    glPopMatrix();
 
-    // Desenha o poligono B no canto superior direito
-    glPushMatrix();
-    glTranslatef(Terco.x * 2, Meio.y, 0);
-    glScalef(0.33, 0.5, 1);
-    glLineWidth(2);
-    glColor3f(1, 0, 0); // R, G, B  [0..1]
-    Intersecao.desenha_poligono();
-    glPopMatrix();
+    for(int i=0; i<binit.size(); i++)
+    {
+        Ponto p;
+        CalculaPonto(binit[i], p);
+        B[i].x = p.x;
+        B[i].y = p.y;
+    }
 
-    // Desenha o poligono A no canto inferior esquerdo
-    glPushMatrix();
-    glTranslatef(0, 0, 0);
-    glScalef(0.33, 0.5, 1);
-    glLineWidth(2);
-    glColor3f(1, 1, 0); // R, G, B  [0..1]
-    Diferenca_A_B.desenha_poligono();
     glPopMatrix();
+    glLineWidth(0.5);
+    glColor3f(1,0,0); // R, G, B  [0..1]
+    glBegin(GL_LINE_LOOP);
+    for (auto &Vertice : B)
+    {
+        glVertex3f(Vertice.x, Vertice.y, Vertice.z);
+    }
+    glEnd();
 
-    // Desenha o poligono B no meio, abaixo
-    glPushMatrix();
-    glTranslatef(Terco.x, 0, 0);
-    glScalef(0.33, 0.5, 1);
-    glLineWidth(2);
-    glColor3f(1, 0, 0); // R, G, B  [0..1]
-    Diferenca_B_A.desenha_poligono();
-    glPopMatrix();
-
+    glLineWidth(0.5);
+    glColor3f(0,0,1); // R, G, B  [0..1]
+    glBegin(GL_LINE_LOOP);
+    for (auto &Vertice : binit)
+    {
+        glVertex3f(Vertice.x, Vertice.y, Vertice.z);
+    }
+    glEnd();
+    //imprime p1_new e p2_new
     glutSwapBuffers();
 }
 
@@ -361,6 +283,12 @@ void keyboard(unsigned char key, int x, int y)
         case ' ':
             desenha = !desenha;
             break;
+        case 'a':
+            walk += -1;
+            break;
+        case 'd':
+            walk += 1;
+            break;
         default:
             break;
     }
@@ -378,6 +306,12 @@ void arrow_keys(int a_keys, int x, int y)
             glutPositionWindow(50, 50);
             glutReshapeWindow(700, 500);
             break;
+        case GLUT_KEY_RIGHT:
+            angle -= 1;
+            break;
+        case GLUT_KEY_LEFT:
+            angle += 1;
+            break;
         default:
             break;
     }
@@ -392,7 +326,7 @@ int main(int argc, char** argv)
     glutInitWindowPosition(0, 0);
 
     // Define o tamanho inicial da janela grafica do programa
-    glutInitWindowSize(1000, 500);
+    glutInitWindowSize(800, 600);
 
     // Cria a janela na tela, definindo o nome da
     // que aparecera na barra de titulo da janela.

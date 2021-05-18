@@ -1,9 +1,6 @@
 //
-//  Ponto.cpp
-//  OpenGLTest
-//
-//  Created by Márcio Sarroglia Pinho on 18/08/20.
-//  Copyright © 2020 Márcio Sarroglia Pinho. All rights reserved.
+// Initial class given by professor Marcio Sarroglia Pinho
+// Modified by Eduardo Andrade and Marcelo Heredia
 //
 
 #include "math.h"
