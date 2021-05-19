@@ -1,52 +1,52 @@
 //
-// Initial class given by professor Marcio Sarroglia Pinho
+// Initial class given by professor Marcio Sarroglia Pinho (PUCRS)
 // Modified by Eduardo Andrade and Marcelo Heredia
 //
 
 #include "math.h"
-#include "../headers/Ponto.h"
+#include "../headers/Point.h"
 
-Ponto::Ponto()
+Point::Point()
 {
     x = y = z = 0;
 }
 
-Ponto::Ponto(float x, float y, float z)
+Point::Point(float x, float y, float z)
 {
     this->x = x;
     this->y = y;
     this->z = z;
 }
 
-void Ponto::set(float x, float y, float z)
+void Point::set(float x, float y, float z)
 {
     this->x = x;
     this->y = y;
     this->z = z;
 }
 
-void Ponto::imprime()
+void Point::imprime()
 {
     cout << "(" << x << ", " << y << ")" << flush;
 }
 
-void Ponto::multiply(double x, double y, double z)
+void Point::multiply(double x, double y, double z)
 {
     this->x *= x;
     this->y *= y;
     this->z *= z;
 }
 
-void Ponto::sum(double x, double y, double z)
+void Point::sum(double x, double y, double z)
 {
     this->x += x;
     this->y += y;
     this->z += z;
 }
 
-Ponto get_max(Ponto p1, Ponto p2)
+Point get_max(Point p1, Point p2)
 {
-    Ponto max;
+    Point max;
 
     max.x = (p2.x > p1.x) ? p2.x : p1.x;
     max.y = (p2.y > p1.y) ? p2.y : p1.y;
@@ -54,9 +54,9 @@ Ponto get_max(Ponto p1, Ponto p2)
     return max;
 }
 
-Ponto get_min(Ponto p1, Ponto p2)
+Point get_min(Point p1, Point p2)
 {
-    Ponto min;
+    Point min;
 
     min.x = (p2.x < p1.x) ? p2.x : p1.x;
     min.y = (p2.y < p1.y) ? p2.y : p1.y;
@@ -65,7 +65,7 @@ Ponto get_min(Ponto p1, Ponto p2)
     return min;
 }
 
-bool Ponto::operator==(const Ponto other) const
+bool Point::operator==(const Point other) const
 {
     return (x == other.x) && (y == other.y);
 }
@@ -79,11 +79,11 @@ bool Ponto::operator==(const Ponto other) const
  * @param p - ponto de intersecao, caso haja
  * @returns false quando nao ha intersecao, true quando ha
  */
-bool intersec2d(Ponto k, Ponto l, Ponto m, Ponto n, Ponto &p)
+bool intersec2d(Point k, Point l, Point m, Point n, Point &p)
 {
     double det;
-    Ponto s1 = Ponto(l.x - k.x, l.y - k.y);
-    Ponto s2 = Ponto(n.x - m.x, n.y - m.y);
+    Point s1 = Point(l.x - k.x, l.y - k.y);
+    Point s2 = Point(n.x - m.x, n.y - m.y);
     det = -(s2.x) * (s1.y) + (s1.x) * (s2.y);
 
     if (det == 0.0)
@@ -96,7 +96,7 @@ bool intersec2d(Ponto k, Ponto l, Ponto m, Ponto n, Ponto &p)
 
     if (s >= 0.0 && s <= 1.0 && t >= 0.0 && t <= 1.0)
     {
-        p = Ponto(k.x + (t * s1.x), k.y + (t * s1.y));
+        p = Point(k.x + (t * s1.x), k.y + (t * s1.y));
         return true;
     }
     return false;
@@ -105,7 +105,7 @@ bool intersec2d(Ponto k, Ponto l, Ponto m, Ponto n, Ponto &p)
 /**
  * Calcula o produto escalar entre os vetores V1 e V2
  */
-double prod_escalar(Ponto v1, Ponto v2)
+double prod_escalar(Point v1, Point v2)
 {
     return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
@@ -113,7 +113,7 @@ double prod_escalar(Ponto v1, Ponto v2)
 /**
  * Calcula o produto vetorial entre os vetores V1 e V2 e guarda em x,y,z de vResult
  */
-void prod_vetorial(Ponto v1, Ponto v2, Ponto &vResult)
+void prod_vetorial(Point v1, Point v2, Point &vResult)
 {
     vResult.x = v1.y * v2.z - (v1.z * v2.y);
     vResult.y = v1.z * v2.x - (v1.x * v2.z);

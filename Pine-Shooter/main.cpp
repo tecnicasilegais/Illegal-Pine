@@ -14,7 +14,6 @@ using namespace std;
 
 #include <windows.h>
 #include <GL/glut.h>
-#include <nlohmann/json.hpp>
 #else
 
 #include <sys/time.h>
@@ -33,108 +32,98 @@ using namespace std;
 
 #include "image_libs/TextureClass.h"
 #include "image_libs/ImageClass.h"
-#include "headers/Ponto.h"
-#include "headers/Poligono.h"
+#include "headers/Point.h"
+#include "headers/BoundingBox.h"
 #include "headers/Temporizador.h"
+#include "headers/util.h"
 
 // Global Variables
 Temporizador T;
 double accum_delta_t = 0;
 
 //declarando poligonos que serao utilizados
-Poligono A;
-vector<Ponto> B, binit;
+BoundingBox A;
+vector<Point> B, binit;
 
 //Limites logicos da area de desenho
-Ponto Min, Max, Largura;
+Point Min, Max, Largura;
 
 float angle = 0.0;
 float walk = 0.0;
 float scale = 1;
 double n_frames = 0;
 double tempo_total = 0;
+GLfloat acum = 0;
 
 
 ImageClass bg;
 
 
 GLfloat AspectRatio, AngY=0;
-GLuint TEX1;
+GLuint PLAYER;
 
-void initTexture (void)
-{
-    TEX1 = LoadTexture ("img/eagle.png");
-}
 
 void DesenhaCubo ()
 {
     glBegin ( GL_QUADS );
     // Front Face
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex3f(-1.0f, -1.0f,  1.0f);
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex3f( 1.0f, -1.0f,  1.0f);
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex3f( 1.0f,  1.0f,  1.0f);
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex3f(-1.0f,  1.0f,  1.0f);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
     glEnd();
+    /*
+    glBegin ( GL_QUADS );
+    // Front Face
+    glTexCoord2f(acum/12.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+    glTexCoord2f((acum+1)/12.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+    glTexCoord2f((acum+1)/12.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+    glTexCoord2f(acum/12.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+    glEnd();*/
 
 }
-void PosicUser()
-{
-    // Set the clipping volume
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(90,AspectRatio,0.01,200);
 
+void CalculaPonto(Point p, Point &out) {
+
+    GLfloat ponto_novo[4];
+    GLfloat matriz_gl[4][4];
+    int  i;
+
+    glGetFloatv(GL_MODELVIEW_MATRIX,&matriz_gl[0][0]);
+
+    for(i=0; i<4; i++) {
+        ponto_novo[i] = matriz_gl[0][i] * p.x +
+                        matriz_gl[1][i] * p.y +
+                        matriz_gl[2][i] * p.z +
+                        matriz_gl[3][i];
+    }
+    out.x = ponto_novo[0];
+    out.y = ponto_novo[1];
+    out.z = ponto_novo[2];
+
+}
+Point p1, p2;
+
+void displayBackground()
+{
+    glMatrixMode(GL_PROJECTION);//Define os limites logicos da area OpenGL dentro da Janela
+    glLoadIdentity();
+    glOrtho(Min.x, Max.x, Min.y, Max.y,-1, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0, 0, 0,
-              0,0,-8,
-              0.0f,1.0f,0.0f);
-
-}
-/**
- * Le o arquivo nome e popula o poligono P
- */
-void le_poligono(const string nome, Poligono &P)
-{
-    ifstream input;
-    input.open(nome, ios::in);
-    if (!input)
-    {
-        cout << "Erro ao abrir " << nome << ". " << endl;
-        exit(0);
-    }
-    cout << "Lendo arquivo " << nome << "...";
-    string S;
-    int nLinha = 0;
-    unsigned int qtdVertices;
-
-    input >> qtdVertices;
-
-    for (int i = 0; i < qtdVertices; i++)
-    {
-        double x, y;
-        // Le cada elemento da linha
-        input >> x >> y;
-        if (!input)
-        {
-            break;
-        }
-        nLinha++;
-        P.insere_vertice(Ponto(x, y));
-    }
-    cout << "Poligono lido com sucesso!" << endl;
-
+    float zoomH = (glutGet(GLUT_WINDOW_WIDTH))/(double)bg.SizeX();
+    float zoomV = (glutGet(GLUT_WINDOW_HEIGHT))/(double)bg.SizeY();
+    bg.SetZoomH(zoomH);
+    bg.SetZoomV(zoomV);
+    bg.SetPos(0, 0);
+    bg.Display();
 }
 
 void init()
 {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    initTexture();
+    PLAYER = initTexture();
 
     string nome = "./img/Pine-BG.png";
     if(!bg.Load(nome.c_str())){exit(666);}
@@ -142,17 +131,17 @@ void init()
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 
-    A.insere_vertice(Ponto(20,20, -0.5));
-    A.insere_vertice(Ponto(20,25, -0.5));
-    A.insere_vertice(Ponto(25,25, -0.5));
-    A.insere_vertice(Ponto(22.5,22.5, -0.5));
-    A.insere_vertice(Ponto(25,20, -0.5));
+    A.insere_vertice(Point(20,20, -0.5));
+    A.insere_vertice(Point(20,25, -0.5));
+    A.insere_vertice(Point(25,25, -0.5));
+    A.insere_vertice(Point(22.5,22.5, -0.5));
+    A.insere_vertice(Point(25,20, -0.5));
 
 
-    binit.emplace_back(20,20);
-    binit.emplace_back(20,25);
-    binit.emplace_back(25,25);
-    binit.emplace_back(25,20);
+    binit.emplace_back(-1,-1);
+    binit.emplace_back(1,-1);
+    binit.emplace_back(1,1);
+    binit.emplace_back(-1,1);
 
     B.emplace_back(20,20);
     B.emplace_back(20,25);
@@ -165,8 +154,8 @@ void init()
     A.get_max().imprime();
 
     // Atualiza os limites globais apos cada leitura
-    Min = Ponto(0,0) ;
-    Max = Ponto(50,50);
+    Min = Point(0,0) ;
+    Max = Point(50,50);
 
     cout << "Limites Globais" << endl;
     cout << "\tMinimo:";
@@ -224,72 +213,48 @@ void reshape(int w, int h)
             Min.y, Max.y,
             -1, 1);
 
-    //PosicUser();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
-void CalculaPonto(Ponto p, Ponto &out) {
 
-    GLfloat ponto_novo[4];
-    GLfloat matriz_gl[4][4];
-    int  i;
-
-    glGetFloatv(GL_MODELVIEW_MATRIX,&matriz_gl[0][0]);
-
-    for(i=0; i<4; i++) {
-        ponto_novo[i] = matriz_gl[0][i] * p.x +
-                        matriz_gl[1][i] * p.y +
-                        matriz_gl[2][i] * p.z +
-                        matriz_gl[3][i];
-    }
-    out.x = ponto_novo[0];
-    out.y = ponto_novo[1];
-    out.z = ponto_novo[2];
-
-}
-Ponto p1, p2;
 void display(void)
 {
-
     // Limpa a tela coma cor de fundo
     glClear(GL_COLOR_BUFFER_BIT);
-    //glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     // Define os limites logicos da area OpenGL dentro da Janela
-   // glMatrixMode(GL_MODELVIEW);
-  //  glLoadIdentity();
+    //glMatrixMode(GL_MODELVIEW);
+    //glLoadIdentity();
 
-    //glClear(GL_COLOR_BUFFER_BIT); //Limpa a tela coma cor de fundo
-
-
-    glColor3f(1,1,1);
+    //glColor3f(1,1,1);
     glDisable( GL_TEXTURE_2D);
-    glMatrixMode(GL_PROJECTION);//Define os limites logicos da area OpenGL dentro da Janela
-    glLoadIdentity();
-    glOrtho(Min.x, Max.x, Min.y, Max.y,-1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    float zoomH = (glutGet(GLUT_WINDOW_WIDTH))/(double)bg.SizeX();
-    float zoomV = (glutGet(GLUT_WINDOW_HEIGHT))/(double)bg.SizeY();
-    bg.SetZoomH(zoomH);
-    bg.SetZoomV(zoomV);
-    bg.SetPos(0, 0);
-    bg.Display();
+    displayBackground();
 
 
+    glPushMatrix();
     glEnable(GL_TEXTURE_2D);
     glColor3f(1,1,1);
-    glPushMatrix();
-    //PosicUser();
     //glTranslatef ( -2.0f, 2.0f, -5.0f );
-    glTranslatef ( 20.0f+walk, 20.0f, -1);
-    glScalef(2*scale,4*scale,1);
+    glTranslatef ( 25, 25.0f, -1);
+    //glScalef(2*scale,4*scale,1);
+    glScalef(2, 2,1);
     glRotatef(angle, 0,0,1);
-    glBindTexture (GL_TEXTURE_2D, TEX1);
+    glBindTexture (GL_TEXTURE_2D, PLAYER);
     DesenhaCubo();
-    glPopMatrix();
 
     glDisable( GL_TEXTURE_2D);
+
+    glLineWidth(0.5);
+    glColor3f(1,0,0); // R, G, B  [0..1]
+
+    glBegin(GL_LINE_LOOP);
+    for (auto &Vertice : binit)
+    {
+        glVertex3f(Vertice.x, Vertice.y, Vertice.z);
+    }
+    glEnd();
+
+    glPopMatrix();
 
 
 /*
@@ -306,7 +271,7 @@ void display(void)
 
     for(int i=0; i<binit.size(); i++)
     {
-        Ponto p;
+        Point p;
         CalculaPonto(binit[i], p);
         B[i].x = p.x;
         B[i].y = p.y;
@@ -368,6 +333,9 @@ void keyboard(unsigned char key, int x, int y)
             conta_tempo(3);
             break;
         case ' ':
+            acum +=1;
+            if(acum >= 11){acum = 0;}
+            glutPostRedisplay();
             break;
         case 'a':
             walk += -1;
