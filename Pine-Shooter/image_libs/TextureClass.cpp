@@ -39,7 +39,6 @@ GLuint LoadTexture (const char *nomeTex)
         cout << "Erro lendo imagem " << nomeTex << endl;
         exit(1);
     }
-
     int level = 0;
     int border = 0;
 

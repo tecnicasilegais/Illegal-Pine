@@ -50,8 +50,10 @@ Ponto Min, Max, Largura;
 
 float angle = 0.0;
 float walk = 0.0;
+float scale = 1;
 double n_frames = 0;
 double tempo_total = 0;
+
 
 ImageClass bg;
 
@@ -61,7 +63,7 @@ GLuint TEX1;
 
 void initTexture (void)
 {
-    TEX1 = LoadTexture ("img/maiscol.png");
+    TEX1 = LoadTexture ("img/eagle.png");
 }
 
 void DesenhaCubo ()
@@ -130,12 +132,8 @@ void le_poligono(const string nome, Poligono &P)
 
 void init()
 {
-
-    glShadeModel(GL_SMOOTH);
-    glColorMaterial ( GL_FRONT, GL_AMBIENT_AND_DIFFUSE );
-    glEnable(GL_DEPTH_TEST);
-    glEnable ( GL_CULL_FACE );
-
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     initTexture();
 
     string nome = "./img/Pine-BG.png";
@@ -144,11 +142,11 @@ void init()
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 
-    A.insere_vertice(Ponto(20,20));
-    A.insere_vertice(Ponto(20,25));
-    A.insere_vertice(Ponto(25,25));
-    A.insere_vertice(Ponto(22.5,22.5));
-    A.insere_vertice(Ponto(25,20));
+    A.insere_vertice(Ponto(20,20, -0.5));
+    A.insere_vertice(Ponto(20,25, -0.5));
+    A.insere_vertice(Ponto(25,25, -0.5));
+    A.insere_vertice(Ponto(22.5,22.5, -0.5));
+    A.insere_vertice(Ponto(25,20, -0.5));
 
 
     binit.emplace_back(20,20);
@@ -224,7 +222,7 @@ void reshape(int w, int h)
     // Define os limites logicos da area OpenGL dentro da Janela
     glOrtho(Min.x, Max.x,
             Min.y, Max.y,
-            0, 1);
+            -1, 1);
 
     //PosicUser();
     glMatrixMode(GL_MODELVIEW);
@@ -254,18 +252,21 @@ void display(void)
 {
 
     // Limpa a tela coma cor de fundo
-    //glClear(GL_COLOR_BUFFER_BIT);
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    glClear(GL_COLOR_BUFFER_BIT);
+    //glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     // Define os limites logicos da area OpenGL dentro da Janela
    // glMatrixMode(GL_MODELVIEW);
   //  glLoadIdentity();
 
-
     //glClear(GL_COLOR_BUFFER_BIT); //Limpa a tela coma cor de fundo
+
+
+    glColor3f(1,1,1);
+    glDisable( GL_TEXTURE_2D);
     glMatrixMode(GL_PROJECTION);//Define os limites logicos da area OpenGL dentro da Janela
     glLoadIdentity();
-    glOrtho(Min.x, Max.x, Min.y, Max.y,0, 1);
+    glOrtho(Min.x, Max.x, Min.y, Max.y,-1, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     float zoomH = (glutGet(GLUT_WINDOW_WIDTH))/(double)bg.SizeX();
@@ -276,26 +277,32 @@ void display(void)
     bg.Display();
 
 
-
+    glEnable(GL_TEXTURE_2D);
+    glColor3f(1,1,1);
     glPushMatrix();
-    PosicUser();
-    glTranslatef ( -2.0f, 2.0f, -5.0f );
-    //glRotatef(AngY,0,1,0);
-    //glColor3f(0.0f,0.6f,0.0f); // Verde
+    //PosicUser();
+    //glTranslatef ( -2.0f, 2.0f, -5.0f );
+    glTranslatef ( 20.0f+walk, 20.0f, -1);
+    glScalef(2*scale,4*scale,1);
+    glRotatef(angle, 0,0,1);
     glBindTexture (GL_TEXTURE_2D, TEX1);
     DesenhaCubo();
     glPopMatrix();
 
+    glDisable( GL_TEXTURE_2D);
+
 
 /*
-    glPushMatrix();
-    glTranslatef(22.5+walk, 22.5, 0);
-    glRotatef(angle, 0,0,1);
-    glTranslatef(-22.5, -22.5, 0);
-    glLineWidth(2);
-    glColor3f(0,1,0); // R, G, B  [0..1]
-    A.desenha_poligono();
 
+    glPushMatrix();
+    glLoadIdentity();
+    glColor3f(1,0,0); // R, G, B  [0..1]
+    //glTranslatef(22.5+walk, 22.5, 0);
+    //glRotatef(angle, 0,0,1);
+    //glTranslatef(-22.5, -22.5, 0);
+    glLineWidth(3);
+    A.desenha_poligono();
+    glPopMatrix();
 
     for(int i=0; i<binit.size(); i++)
     {
@@ -378,12 +385,14 @@ void arrow_keys(int a_keys, int x, int y)
     switch (a_keys)
     {
         case GLUT_KEY_UP:       // Se pressionar UP
-            glutFullScreen(); // Vai para Full Screen
+            //glutFullScreen(); // Vai para Full Screen
+            scale += 0.5;
             break;
         case GLUT_KEY_DOWN:     // Se pressionar UP
             // Reposiciona a janela
-            glutPositionWindow(50, 50);
-            glutReshapeWindow(700, 500);
+            //glutPositionWindow(50, 50);
+            //glutReshapeWindow(700, 500);
+            scale -= 0.5;
             break;
         case GLUT_KEY_RIGHT:
             angle -= 1;
