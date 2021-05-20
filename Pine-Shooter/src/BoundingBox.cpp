@@ -1,12 +1,5 @@
 
 #include "../headers/BoundingBox.h"
-#include "../headers/Point.h"
-
-#ifdef __linux__
-#include<bits/stdc++.h>
-#endif
-
-#include <chrono>
 
 BoundingBox::BoundingBox()
 = default;
@@ -103,7 +96,7 @@ void BoundingBox::imprime()
 {
     for (auto &vertice : Vertices)
     {
-        vertice.imprime();
+        vertice.print();
     }
 }
 

@@ -28,14 +28,11 @@ using namespace std;
 #include <GL/glut.h>
 #endif
 
-#include <SOIL/SOIL.h>
-
-#include "image_libs/TextureClass.h"
 #include "image_libs/ImageClass.h"
 #include "headers/Point.h"
 #include "headers/BoundingBox.h"
 #include "headers/Temporizador.h"
-#include "headers/util.h"
+#include "headers/Engine.h"
 
 // Global Variables
 Temporizador T;
@@ -46,7 +43,6 @@ BoundingBox A;
 vector<Point> B, binit;
 
 //Limites logicos da area de desenho
-Point Min, Max, Largura;
 
 float angle = 0.0;
 float walk = 0.0;
@@ -102,31 +98,24 @@ void CalculaPonto(Point p, Point &out) {
     out.z = ponto_novo[2];
 
 }
-Point p1, p2;
 
-void displayBackground()
+
+void init_textures()
 {
-    glMatrixMode(GL_PROJECTION);//Define os limites logicos da area OpenGL dentro da Janela
-    glLoadIdentity();
-    glOrtho(Min.x, Max.x, Min.y, Max.y,-1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    float zoomH = (glutGet(GLUT_WINDOW_WIDTH))/(double)bg.SizeX();
-    float zoomV = (glutGet(GLUT_WINDOW_HEIGHT))/(double)bg.SizeY();
-    bg.SetZoomH(zoomH);
-    bg.SetZoomV(zoomV);
-    bg.SetPos(0, 0);
-    bg.Display();
+    if(!bg.Load(BG_FILE)){exit(666);} //load BG image
+
+    PLAYER = LoadTexture(PLAYER_FILE);
+
+
 }
 
 void init()
 {
+    //allow transparency
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    PLAYER = initTexture();
 
-    string nome = "./img/Pine-BG.png";
-    if(!bg.Load(nome.c_str())){exit(666);}
+    init_textures();
     // Define a cor do fundo da tela (AZUL)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -147,27 +136,6 @@ void init()
     B.emplace_back(20,25);
     B.emplace_back(25,25);
     B.emplace_back(25,20);
-
-    cout << "\tMinimo:";
-    A.get_min().imprime();
-    cout << "\tMaximo:";
-    A.get_max().imprime();
-
-    // Atualiza os limites globais apos cada leitura
-    Min = Point(0,0) ;
-    Max = Point(50,50);
-
-    cout << "Limites Globais" << endl;
-    cout << "\tMinimo:";
-    Min.imprime();
-    cout << "\tMaximo:";
-    Max.imprime();
-    cout << endl;
-
-    // Ajusta a largura da janela logica
-    // em funcao do tamanho dos poligonos
-    Largura.x = Max.x - Min.x;
-    Largura.y = Max.y - Min.y;
 
 }
 
@@ -209,8 +177,8 @@ void reshape(int w, int h)
     // Define a area a ser ocupada pela area OpenGL dentro da Janela
     glViewport(0, 0, w, h);
     // Define os limites logicos da area OpenGL dentro da Janela
-    glOrtho(Min.x, Max.x,
-            Min.y, Max.y,
+    glOrtho(0, ORTHO_X,
+            0, ORTHO_Y,
             -1, 1);
 
     glMatrixMode(GL_MODELVIEW);
@@ -222,13 +190,7 @@ void display(void)
     // Limpa a tela coma cor de fundo
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Define os limites logicos da area OpenGL dentro da Janela
-    //glMatrixMode(GL_MODELVIEW);
-    //glLoadIdentity();
-
-    //glColor3f(1,1,1);
-    glDisable( GL_TEXTURE_2D);
-    displayBackground();
+    displayBackground(bg);
 
 
     glPushMatrix();
@@ -256,7 +218,10 @@ void display(void)
 
     glPopMatrix();
 
-
+    glBegin(GL_LINES);
+    glVertex3f(0,7.6,0);
+    glVertex3f(50,7.6,0);
+    glEnd();
 /*
 
     glPushMatrix();
@@ -295,7 +260,7 @@ void display(void)
         glVertex3f(Vertice.x, Vertice.y, Vertice.z);
     }
     glEnd();
-    //imprime p1_new e p2_new*/
+    //print p1_new e p2_new*/
     glutSwapBuffers();
 }
 
@@ -381,9 +346,9 @@ int main(int argc, char** argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGB);
     glutInitWindowPosition(0, 0);
 
-    glutInitWindowSize(1000, 600);
+    glutInitWindowSize(1200, 650);
 
-    glutCreateWindow("Primeiro Programa em OpenGL");
+    glutCreateWindow("Pine Shooter");
 
     init();
 

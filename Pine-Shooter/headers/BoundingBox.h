@@ -19,6 +19,7 @@ using namespace std;
 
 #ifdef __linux__
 #include <GL/glut.h>
+#include<bits/stdc++.h>
 #endif
 
 #include "Point.h"

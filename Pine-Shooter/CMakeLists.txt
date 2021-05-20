@@ -9,5 +9,5 @@ file(GLOB IMAGE "image_libs/*")
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB HEADERS "headers/*.h")
 
-add_executable(Pine_Shooter ${SOURCES} ${IMAGE} ${HEADERS} main.cpp headers/util.h)
+add_executable(Pine_Shooter ${SOURCES} ${IMAGE} ${HEADERS} main.cpp src/Engine.cpp headers/Engine.h)
 target_link_libraries(Pine_Shooter -lglut -lGLU -lGL -lSOIL)
