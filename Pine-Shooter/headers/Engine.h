@@ -33,7 +33,7 @@ using namespace std;
 #define FLOOR_H 19.6
 #define BB_GL_COLOR glColor3f(1,0,0)
 
-#define BG_FILE "img/Pine-BG.png"
+#define BG_FILE "img/background.png"
 #define EXPLOSION_T "img/Explosion.png"
 #define BUILD1_T "img/build1.png"
 #define BUILD2_T "img/build2.png"
@@ -41,8 +41,8 @@ using namespace std;
 #define BUILD4_T "img/build4.png"
 #define PW_STICK_T "img/stick.png"
 #define PW_SPIRAL_T "img/pinwheel.png"
-#define PLAYER_FILE "img/fatsquirrel.png"
-#define PLAYER_AMMO_T "img/pine2.png"
+#define PLAYER_FILE "img/squirrel.png"
+#define PLAYER_AMMO_T "img/pine.png"
 #define EAGLE_T "img/eagle.png"
 #define RAVEN_T "img/raven.png"
 #define OWL_T "img/owl.png"
