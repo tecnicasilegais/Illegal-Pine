@@ -24,6 +24,7 @@ using namespace std;
 
 #include <iostream>
 #include <image_libs/TextureClass.h>
+#include <map>
 #include "Point.h"
 
 //Ortho
@@ -31,26 +32,47 @@ using namespace std;
 #define ORTHO_Y 50
 
 #define BG_FILE "img/Pine-BG.png"
-#define EXPLOSION "img/Explosion.png"
-
-#define BUILD1 "img/build1.png"
-#define BUILD2 "img/build2.png"
-#define BUILD3 "img/build3.png"
-#define BUILD4 "img/build4.png"
-#define PW_STICK "img/stick.png"
-#define PW_SPIRAL "img/pinwheel.png"
-
+#define EXPLOSION_T "img/Explosion.png"
+#define BUILD1_T "img/build1.png"
+#define BUILD2_T "img/build2.png"
+#define BUILD3_T "img/build3.png"
+#define BUILD4_T "img/build4.png"
+#define PW_STICK_T "img/stick.png"
+#define PW_SPIRAL_T "img/pinwheel.png"
 #define PLAYER_FILE "img/fatsquirrel.png"
-#define PLAYER_AMMO "img/pine2.png"
+#define PLAYER_AMMO_T "img/pine2.png"
+#define EAGLE_T "img/eagle.png"
+#define RAVEN_T "img/raven.png"
+#define OWL_T "img/owl.png"
+#define ENEMY_AMMO_T "img/bird_poop.png"
 
-#define EAGLE "img/eagle.png"
-#define RAVEN "img/raven.png"
-#define OWL "img/owl.png"
-#define ENEMY_AMMO "bird-poop.png"
+#define PLAYER 1
+#define PLAYER_AMMO 2
+#define EAGLE 3
+#define RAVEN 4
+#define OWL 5
+#define ENEMY_AMMO 6
+#define EXPLOSION 7
+#define BUILD1 8
+#define BUILD2 9
+#define BUILD3 10
+#define BUILD4 11
+#define PW_STICK 12
+#define PW_SPIRAL 13
 
 
-
-
+class GameTextures
+{
+private:
+    map<int, GLuint> textures;
+public:
+    GameTextures();
+    GLuint owl;
+    void init();
+    void draw_texture(int n);
+    GLuint get(int n);
+};
+void DesenhaCubo ();
 void displayBackground(ImageClass &bg);
 
 

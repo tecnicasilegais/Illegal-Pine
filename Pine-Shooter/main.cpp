@@ -53,31 +53,10 @@ GLfloat acum = 0;
 
 
 ImageClass bg;
-
+GameTextures gt;
 
 GLfloat AspectRatio, AngY=0;
-GLuint PLAYER;
 
-
-void DesenhaCubo ()
-{
-    glBegin ( GL_QUADS );
-    // Front Face
-    glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
-    glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
-    glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
-    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
-    glEnd();
-    /*
-    glBegin ( GL_QUADS );
-    // Front Face
-    glTexCoord2f(acum/12.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
-    glTexCoord2f((acum+1)/12.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
-    glTexCoord2f((acum+1)/12.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
-    glTexCoord2f(acum/12.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
-    glEnd();*/
-
-}
 
 void CalculaPonto(Point p, Point &out) {
 
@@ -103,9 +82,7 @@ void CalculaPonto(Point p, Point &out) {
 void init_textures()
 {
     if(!bg.Load(BG_FILE)){exit(666);} //load BG image
-
-    PLAYER = LoadTexture(PLAYER_FILE);
-
+    gt.init();
 
 }
 
@@ -114,7 +91,6 @@ void init()
     //allow transparency
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     init_textures();
     // Define a cor do fundo da tela (AZUL)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -201,11 +177,10 @@ void display(void)
     //glScalef(2*scale,4*scale,1);
     glScalef(2, 2,1);
     glRotatef(angle, 0,0,1);
-    glBindTexture (GL_TEXTURE_2D, PLAYER);
+    glBindTexture (GL_TEXTURE_2D, gt.get(PLAYER));
     DesenhaCubo();
 
     glDisable( GL_TEXTURE_2D);
-
     glLineWidth(0.5);
     glColor3f(1,0,0); // R, G, B  [0..1]
 
@@ -217,6 +192,8 @@ void display(void)
     glEnd();
 
     glPopMatrix();
+
+    gt.draw_texture(1);
 
     glBegin(GL_LINES);
     glVertex3f(0,7.6,0);
