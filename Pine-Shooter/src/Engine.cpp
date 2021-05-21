@@ -2,10 +2,6 @@
 
 GameTextures::GameTextures()
 {
-}
-
-void GameTextures::init()
-{
     textures[PLAYER] = LoadTexture(PLAYER_FILE);
     textures[PLAYER_AMMO] = LoadTexture(PLAYER_AMMO_T);
     textures[RAVEN] = LoadTexture(RAVEN_T);
@@ -24,12 +20,9 @@ void GameTextures::init()
 void GameTextures::draw_texture(int n)
 {
     glPushMatrix();
-    glEnable(GL_TEXTURE_2D);
     glColor3f(1,1,1);
-    //glTranslatef ( -2.0f, 2.0f, -5.0f );
+    glEnable(GL_TEXTURE_2D);
     glTranslatef ( 15, 15.0f, -1);
-    //glScalef(2*scale,4*scale,1);
-    glScalef(2, 2,1);
     glBindTexture (GL_TEXTURE_2D, textures[n]);
     DesenhaCubo();
 
@@ -41,10 +34,10 @@ void DesenhaCubo ()
 {
     glBegin ( GL_QUADS );
     // Front Face
-    glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
-    glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
-    glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
-    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  0.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  0.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  0.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  0.0f);
     glEnd();
     /*
     glBegin ( GL_QUADS );
@@ -62,7 +55,9 @@ GLuint GameTextures::get(int n)
     return textures[n];
 }
 
-void displayBackground(ImageClass &bg)
+
+
+void display_background(ImageClass &bg)
 {
     glMatrixMode(GL_PROJECTION);//Define os limites logicos da area OpenGL dentro da Janela
     glLoadIdentity();
@@ -77,3 +72,11 @@ void displayBackground(ImageClass &bg)
     bg.Display();
 }
 
+void draw_floor()
+{
+    glBegin(GL_LINES);
+    BB_GL_COLOR;
+    glVertex3f(0, FLOOR_H, -1);
+    glVertex3f(ORTHO_X, FLOOR_H,  -1);
+    glEnd();
+}

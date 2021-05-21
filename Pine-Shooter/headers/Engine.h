@@ -28,8 +28,10 @@ using namespace std;
 #include "Point.h"
 
 //Ortho
-#define ORTHO_X 50
-#define ORTHO_Y 50
+#define ORTHO_X 240
+#define ORTHO_Y 130
+#define FLOOR_H 19.6
+#define BB_GL_COLOR glColor3f(1,0,0)
 
 #define BG_FILE "img/Pine-BG.png"
 #define EXPLOSION_T "img/Explosion.png"
@@ -61,19 +63,23 @@ using namespace std;
 #define PW_SPIRAL 13
 
 
+class GameObject
+{
+
+};
+
 class GameTextures
 {
 private:
     map<int, GLuint> textures;
 public:
     GameTextures();
-    GLuint owl;
-    void init();
     void draw_texture(int n);
     GLuint get(int n);
 };
 void DesenhaCubo ();
-void displayBackground(ImageClass &bg);
 
+void display_background(ImageClass &bg);
+void draw_floor();
 
 #endif //PINE_SHOOTER_ENGINE_H

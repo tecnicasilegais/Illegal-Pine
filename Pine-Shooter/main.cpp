@@ -44,6 +44,8 @@ vector<Point> B, binit;
 
 //Limites logicos da area de desenho
 
+bool debug = false;
+
 float angle = 0.0;
 float walk = 0.0;
 float scale = 1;
@@ -53,7 +55,7 @@ GLfloat acum = 0;
 
 
 ImageClass bg;
-GameTextures gt;
+GameTextures* gt;
 
 GLfloat AspectRatio, AngY=0;
 
@@ -82,7 +84,7 @@ void CalculaPonto(Point p, Point &out) {
 void init_textures()
 {
     if(!bg.Load(BG_FILE)){exit(666);} //load BG image
-    gt.init();
+    gt = new GameTextures;
 
 }
 
@@ -166,18 +168,22 @@ void display(void)
     // Limpa a tela coma cor de fundo
     glClear(GL_COLOR_BUFFER_BIT);
 
-    displayBackground(bg);
+    display_background(bg);
+    if(debug)
+    {
+        draw_floor();
+    }
 
 
     glPushMatrix();
     glEnable(GL_TEXTURE_2D);
     glColor3f(1,1,1);
     //glTranslatef ( -2.0f, 2.0f, -5.0f );
-    glTranslatef ( 25, 25.0f, -1);
+    glTranslatef ( 80, 80, -1);
     //glScalef(2*scale,4*scale,1);
     glScalef(2, 2,1);
     glRotatef(angle, 0,0,1);
-    glBindTexture (GL_TEXTURE_2D, gt.get(PLAYER));
+    glBindTexture (GL_TEXTURE_2D, gt->get(PLAYER));
     DesenhaCubo();
 
     glDisable( GL_TEXTURE_2D);
@@ -193,12 +199,27 @@ void display(void)
 
     glPopMatrix();
 
-    gt.draw_texture(1);
+    gt->draw_texture(2);
 
-    glBegin(GL_LINES);
-    glVertex3f(0,7.6,0);
-    glVertex3f(50,7.6,0);
+    glPushMatrix();
+    glRotatef(-30,0,0,1);
+    glPushMatrix();
+    glTranslatef(57.5,30,0);
+    glScalef(5,10,1);
+    glRectf(-1,-1,0,1);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(50,50,0);
+    glScalef(10,10,1);
+    glBegin(GL_TRIANGLES);
+    glVertex3f(-1,-1,-1);
+    glVertex3f(0,1,-1);
+    glVertex3f(1,-1,-1);
     glEnd();
+    glPopMatrix();
+    glPopMatrix();
+
 /*
 
     glPushMatrix();
@@ -268,9 +289,13 @@ void keyboard(unsigned char key, int x, int y)
 {
     switch (key)
     {
-        case 27:        // Termina o programa qdo
-            exit(0);   // a tecla ESC for pressionada
+        case 27:       //esc
+            delete gt;
+            exit(0);
+        case '1':
+            debug = !debug;
             break;
+
         case 't':
             conta_tempo(3);
             break;
@@ -341,5 +366,6 @@ int main(int argc, char** argv)
 
     glutMainLoop();
 
+    delete gt;
     return 0;
 }
