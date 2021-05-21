@@ -1,143 +1,46 @@
 
 #include "../headers/BoundingBox.h"
 
+// Initialize with default Coordinates
 BoundingBox::BoundingBox()
-= default;
-
-void BoundingBox::insere_vertice(int index, Point p)
 {
-    if (p.x < min.x)
-    {
-        min.x = p.x;
-    }
-    if (p.x > max.x)
-    {
-        max.x = p.x;
-    }
-    if (p.y < min.y)
-    {
-        min.y = p.y;
-    }
-    if (p.y > max.y)
-    {
-        max.y = p.y;
-    }
+    Coordinates[LOWER_LEFT] = Point(-1, -1);
+    Coordinates[UPPER_LEFT] = Point(-1, 1);
+    Coordinates[UPPER_RIGHT] = Point(1, 1);
+    Coordinates[LOWER_RIGHT] = Point(1, -1);
+    mid = Point(0,0);
 
-    Vertices.insert(Vertices.begin() + index, p);
 }
 
-void BoundingBox::insere_vertice(Point p)
+void BoundingBox::draw()
 {
-    if (p.x < min.x)
-    {
-        min.x = p.x;
-    }
-    if (p.x > max.x)
-    {
-        max.x = p.x;
-    }
-    if (p.y < min.y)
-    {
-        min.y = p.y;
-    }
-    if (p.y > max.y)
-    {
-        max.y = p.y;
-    }
-
-    Vertices.push_back(p);
-}
-
-Point BoundingBox::get_vertice(int i)
-{
-    return Vertices[i];
-}
-
-int BoundingBox::index(Point p)
-{
-    auto it = std::find(Vertices.begin(), Vertices.end(), p);
-
-    if (it != Vertices.end())
-    {
-        return it - Vertices.begin();
-    }
-    return -1;
-}
-
-void BoundingBox::desenha_poligono()
-{
+    glLineWidth(2);
+    glPointSize(5);
     glBegin(GL_LINE_LOOP);
-    for (auto &Vertice : Vertices)
+    for (auto &vertex : Coordinates)
     {
-        glVertex3f(Vertice.x, Vertice.y, Vertice.z);
+        glVertex3f(vertex.x, vertex.y, vertex.z);
     }
     glEnd();
-}
-
-void BoundingBox::desenha_vertices()
-{
     glBegin(GL_POINTS);
-    for (auto &vertice : Vertices)
-    {
-        glVertex3f(vertice.x, vertice.y, vertice.z);
-    }
+    glVertex3f(mid.x, mid.y, mid.z);
     glEnd();
 }
 
-void BoundingBox::desenha_vertice(int r, int g, int b, int pos)
+void BoundingBox::print()
 {
-    glColor3f(r, g, b); // R, G, B  [0..1]
-    glBegin(GL_POINTS);
-    glVertex3f(Vertices[pos].x, Vertices[pos].y, Vertices[pos].z);
-    glEnd();
-}
-
-void BoundingBox::imprime()
-{
-    for (auto &vertice : Vertices)
+    for (auto &vertice : Coordinates)
     {
         vertice.print();
     }
 }
 
-unsigned long BoundingBox::size()
-{
-    return Vertices.size();
-}
-
-void BoundingBox::initialize(Point initial)
-{
-    min = initial;
-    max = initial;
-    Vertices.push_back(initial);
-}
-
 Point BoundingBox::get_min()
 {
-    return min;
+    return Coordinates[LOWER_LEFT];
 }
 
 Point BoundingBox::get_max()
 {
-    return max;
+    return Coordinates[UPPER_RIGHT];
 }
-
-void insere_unico(BoundingBox &pol, Point p)
-{
-    if (pol.index(p) != -1)
-    {
-        return;
-    }
-    pol.insere_vertice(p);
-}
-
-bool insere_unico(BoundingBox &pol, int index, Point p)
-{
-    if (pol.index(p) != -1)
-    {
-        return false;
-    }
-    pol.insere_vertice(index, p);
-    return true;
-}
-

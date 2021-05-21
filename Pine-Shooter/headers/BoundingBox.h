@@ -25,25 +25,22 @@ using namespace std;
 #include "Point.h"
 #include <vector>
 
+//include order in vector!!!
+#define LOWER_LEFT 0
+#define UPPER_LEFT 1
+#define UPPER_RIGHT 2
+#define LOWER_RIGHT 3
+
 class BoundingBox
 {
-    vector<Point> Vertices;
-    Point min, max;
+    Point Coordinates[4];
+    Point mid;
 public:
-    int menorPosicao{};
     BoundingBox();
-    unsigned long size();
-    int index(Point p);
-    void desenha_poligono();
-    void desenha_vertice(int r, int g, int b, int pos);
-    void desenha_vertices();
-    void imprime();
-    void initialize(Point initial);
-    void insere_vertice(Point);
-    void insere_vertice(int index, Point p);
+    void draw();
+    void print();
     Point get_min();
     Point get_max();
-    Point get_vertice(int);
 };
 
 

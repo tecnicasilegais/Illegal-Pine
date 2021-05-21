@@ -26,6 +26,7 @@ using namespace std;
 #include <image_libs/TextureClass.h>
 #include <map>
 #include "Point.h"
+#include "BoundingBox.h"
 
 //Ortho
 #define ORTHO_X 240
@@ -65,7 +66,12 @@ using namespace std;
 
 class GameObject
 {
-
+public:
+    BoundingBox bb;
+    Point position, scale, direction, speed;
+    float rotation;
+    int model;
+    void draw();
 };
 
 class GameTextures

@@ -2,22 +2,11 @@
 // Pine Shooter
 // Eduardo Andrade e Marcelo Heredia
 // **********************************************************************
-
-
-#include <iostream>
-#include <cmath>
-#include <ctime>
-#include <fstream>
-
 using namespace std;
 #ifdef WIN32
 
 #include <windows.h>
 #include <GL/glut.h>
-#else
-
-#include <sys/time.h>
-
 #endif
 
 #ifdef __APPLE__
@@ -28,6 +17,7 @@ using namespace std;
 #include <GL/glut.h>
 #endif
 
+#include <iostream>
 #include "image_libs/ImageClass.h"
 #include "headers/Point.h"
 #include "headers/BoundingBox.h"
@@ -38,11 +28,8 @@ using namespace std;
 Temporizador T;
 double accum_delta_t = 0;
 
-//declarando poligonos que serao utilizados
-BoundingBox A;
-vector<Point> B, binit;
-
-//Limites logicos da area de desenho
+//defines where ALL TEXTURES are initialized (-1,-1) (1,1) square.
+BoundingBox INIT_POSITION;
 
 bool debug = false;
 
@@ -56,8 +43,6 @@ GLfloat acum = 0;
 
 ImageClass bg;
 GameTextures* gt;
-
-GLfloat AspectRatio, AngY=0;
 
 
 void CalculaPonto(Point p, Point &out) {
@@ -97,24 +82,6 @@ void init()
     // Define a cor do fundo da tela (AZUL)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-
-    A.insere_vertice(Point(20,20, -0.5));
-    A.insere_vertice(Point(20,25, -0.5));
-    A.insere_vertice(Point(25,25, -0.5));
-    A.insere_vertice(Point(22.5,22.5, -0.5));
-    A.insere_vertice(Point(25,20, -0.5));
-
-
-    binit.emplace_back(-1,-1);
-    binit.emplace_back(1,-1);
-    binit.emplace_back(1,1);
-    binit.emplace_back(-1,1);
-
-    B.emplace_back(20,20);
-    B.emplace_back(20,25);
-    B.emplace_back(25,25);
-    B.emplace_back(25,20);
-
 }
 
 
@@ -149,7 +116,6 @@ void animate()
 void reshape(int w, int h)
 {
     // Reset the coordinate system before modifying
-    AspectRatio = 1.0f * w / h;
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     // Define a area a ser ocupada pela area OpenGL dentro da Janela
@@ -181,7 +147,7 @@ void display(void)
     //glTranslatef ( -2.0f, 2.0f, -5.0f );
     glTranslatef ( 80, 80, -1);
     //glScalef(2*scale,4*scale,1);
-    glScalef(2, 2,1);
+    glScalef(10, 10,1);
     glRotatef(angle, 0,0,1);
     glBindTexture (GL_TEXTURE_2D, gt->get(PLAYER));
     DesenhaCubo();
@@ -190,12 +156,7 @@ void display(void)
     glLineWidth(0.5);
     glColor3f(1,0,0); // R, G, B  [0..1]
 
-    glBegin(GL_LINE_LOOP);
-    for (auto &Vertice : binit)
-    {
-        glVertex3f(Vertice.x, Vertice.y, Vertice.z);
-    }
-    glEnd();
+    INIT_POSITION.draw();
 
     glPopMatrix();
 
@@ -221,16 +182,6 @@ void display(void)
     glPopMatrix();
 
 /*
-
-    glPushMatrix();
-    glLoadIdentity();
-    glColor3f(1,0,0); // R, G, B  [0..1]
-    //glTranslatef(22.5+walk, 22.5, 0);
-    //glRotatef(angle, 0,0,1);
-    //glTranslatef(-22.5, -22.5, 0);
-    glLineWidth(3);
-    A.desenha_poligono();
-    glPopMatrix();
 
     for(int i=0; i<binit.size(); i++)
     {
