@@ -34,6 +34,9 @@ using namespace std;
 #define FLOOR_H 19.6
 #define BB_GL_COLOR glColor3f(1,0,0)
 
+#define HORIZONTAL_SPRITE 0
+#define VERTICAL_SPRITE 1
+
 #define BG_FILE "img/background.png"
 #define EXPLOSION_T "img/Explosion.png"
 #define BUILD1_T "img/build1.png"
@@ -63,17 +66,6 @@ using namespace std;
 #define PW_STICK 12
 #define PW_SPIRAL 13
 
-
-class GameObject
-{
-public:
-    BoundingBox bb;
-    Point position, scale, direction, speed;
-    float rotation;
-    int model;
-    void draw();
-};
-
 class GameTextures
 {
 private:
@@ -83,7 +75,50 @@ public:
     void draw_texture(int n);
     GLuint get(int n);
 };
+
+
+class GameObject
+{
+public:
+    BoundingBox bb;
+    Point position;
+    Point scale=Point(1,1);
+    int model;
+};
+
+class Building: public GameObject
+{
+public:
+    Building(int model, int n_sprites, int s_orientation);
+    bool is_destroyed();
+    void draw(GameTextures &gt);
+private:
+    bool destroyed;
+    int n_sprites, s_orientation, sprite, lives;
+};
+
+class Player: public GameObject
+{
+public:
+    int direction, speed;
+    int lives = 3;
+    float rotation;
+};
+
+class Enemy: public GameObject
+{
+public:
+    int direction, speed;
+
+private:
+
+
+};
+
+
 void DesenhaCubo ();
+void draw_texture(GLuint& n);
+void draw_sprite();
 
 void display_background(ImageClass &bg);
 void draw_floor();

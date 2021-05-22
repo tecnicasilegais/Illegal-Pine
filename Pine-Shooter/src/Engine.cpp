@@ -1,5 +1,8 @@
 #include "headers/Engine.h"
 
+/*
+ * Game Texture class and methods
+ */
 GameTextures::GameTextures()
 {
     textures[PLAYER] = LoadTexture(PLAYER_FILE);
@@ -16,20 +19,44 @@ GameTextures::GameTextures()
     textures[PW_SPIRAL] = LoadTexture(PW_SPIRAL_T);
     textures[EXPLOSION] = LoadTexture(EXPLOSION_T);
 }
+GLuint GameTextures::get(int n)
+{
+    return textures[n];
+}
 
-void GameTextures::draw_texture(int n)
+/*
+ * Game Object classes, subclasses and methods for each of them
+ */
+Building::Building(int model, int n_sprites, int s_orientation)
+{
+    this->model = model;
+    this->n_sprites = n_sprites;
+    this->s_orientation = s_orientation;
+    destroyed = false;
+    lives = 2;
+    sprite = 0;
+}
+bool Building::is_destroyed()
+{
+    return destroyed;
+}
+void Building::draw(GameTextures &gt)
+{
+    GLuint tex = gt.get(model);
+}
+
+void draw_texture(GLuint& tex)
 {
     glPushMatrix();
     glColor3f(1,1,1);
     glEnable(GL_TEXTURE_2D);
     glTranslatef ( 15, 15.0f, -1);
-    glBindTexture (GL_TEXTURE_2D, textures[n]);
+    glBindTexture (GL_TEXTURE_2D, tex);
     DesenhaCubo();
 
     glDisable( GL_TEXTURE_2D);
     glPopMatrix();
 }
-
 void DesenhaCubo ()
 {
     glBegin ( GL_QUADS );
@@ -50,13 +77,11 @@ void DesenhaCubo ()
 
 }
 
-GLuint GameTextures::get(int n)
-{
-    return textures[n];
-}
 
 
-
+/*
+ * draw background using given ImageClass img
+ */
 void display_background(ImageClass &bg)
 {
     glMatrixMode(GL_PROJECTION);//Define os limites logicos da area OpenGL dentro da Janela
@@ -72,6 +97,10 @@ void display_background(ImageClass &bg)
     bg.Display();
 }
 
+/*
+ * Draw a line on the floor
+ * Should only be used on debug mode
+ */
 void draw_floor()
 {
     glBegin(GL_LINES);

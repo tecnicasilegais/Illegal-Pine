@@ -14,8 +14,8 @@ BoundingBox::BoundingBox()
 
 void BoundingBox::draw()
 {
-    glLineWidth(2);
-    glPointSize(5);
+    glLineWidth(1.5);
+    glPointSize(3);
     glBegin(GL_LINE_LOOP);
     for (auto &vertex : Coordinates)
     {

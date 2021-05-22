@@ -21,7 +21,6 @@ public:
     bool operator==(Point other) const;
     void print() const;
     void multiply(double x, double y, double z);
-    void set(float x, float y, float z = 0);
     void sum(double x, double y, double z);
 };
 

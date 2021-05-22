@@ -142,13 +142,13 @@ void display(void)
 
 
     glPushMatrix();
-    glEnable(GL_TEXTURE_2D);
-    glColor3f(1,1,1);
-    //glTranslatef ( -2.0f, 2.0f, -5.0f );
     glTranslatef ( 80, 80, -1);
     //glScalef(2*scale,4*scale,1);
     glScalef(10, 10,1);
     glRotatef(angle, 0,0,1);
+    glEnable(GL_TEXTURE_2D);
+    glColor3f(1,1,1);
+    //glTranslatef ( -2.0f, 2.0f, -5.0f );
     glBindTexture (GL_TEXTURE_2D, gt->get(PLAYER));
     DesenhaCubo();
 
@@ -160,7 +160,7 @@ void display(void)
 
     glPopMatrix();
 
-    gt->draw_texture(2);
+    //gt->draw_texture(2);
 
     glPushMatrix();
     glRotatef(-30,0,0,1);

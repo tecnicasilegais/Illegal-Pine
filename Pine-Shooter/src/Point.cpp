@@ -17,13 +17,6 @@ Point::Point(float x, float y, float z)
     this->z = z;
 }
 
-void Point::set(float x, float y, float z)
-{
-    this->x = x;
-    this->y = y;
-    this->z = z;
-}
-
 void Point::print() const
 {
     cout << "(" << x << ", " << y << ")" << flush;
