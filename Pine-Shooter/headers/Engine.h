@@ -51,6 +51,7 @@ using namespace std;
 #define RAVEN_T "img/raven.png"
 #define OWL_T "img/owl.png"
 #define ENEMY_AMMO_T "img/bird_poop.png"
+#define HEALTH_T "img/life.png"
 
 #define PLAYER 1
 #define PLAYER_AMMO 2
@@ -65,6 +66,7 @@ using namespace std;
 #define BUILD4 11
 #define PW_STICK 12
 #define PW_SPIRAL 13
+#define HEALTH 14
 
 class GameTextures
 {
@@ -73,28 +75,33 @@ private:
 public:
     GameTextures();
     void draw_texture(int n);
+    void draw_sprite(int n, int orientation, GLfloat sprite, GLfloat total_sprites);
     GLuint get(int n);
+
 };
 
 
 class GameObject
 {
 public:
-    BoundingBox bb;
+    BoundingBox bb, root;
+    GLfloat rotation;
+    GLfloat rotation_incr;
     Point position;
     Point scale=Point(1,1);
     int model;
+    void handle_rotation();
 };
 
 class Building: public GameObject
 {
 public:
-    Building(int model, int n_sprites, int s_orientation);
-    bool is_destroyed();
-    void draw(GameTextures &gt);
+    int health;
+    explicit Building(int model, int n_sprites=3, int s_orientation=VERTICAL_SPRITE);
+    bool is_destroyed() const;
+    void draw(GameTextures &gt, bool debug=false);
 private:
-    bool destroyed;
-    int n_sprites, s_orientation, sprite, lives;
+    int n_sprites, s_orientation;
 };
 
 class Player: public GameObject
@@ -102,7 +109,8 @@ class Player: public GameObject
 public:
     int direction, speed;
     int lives = 3;
-    float rotation;
+
+    void display_health(GameTextures& gt);
 };
 
 class Enemy: public GameObject
@@ -112,15 +120,17 @@ public:
 
 private:
 
-
 };
 
-
-void DesenhaCubo ();
-void draw_texture(GLuint& n);
-void draw_sprite();
+class Explosion: public GameObject
+{
+public:
+    int id_target;
+};
 
 void display_background(ImageClass &bg);
 void draw_floor();
+void draw_square(const Point &min, const Point &max);
+
 
 #endif //PINE_SHOOTER_ENGINE_H

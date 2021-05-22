@@ -34,8 +34,6 @@ BoundingBox INIT_POSITION;
 bool debug = false;
 
 float angle = 0.0;
-float walk = 0.0;
-float scale = 1;
 double n_frames = 0;
 double tempo_total = 0;
 GLfloat acum = 0;
@@ -43,27 +41,12 @@ GLfloat acum = 0;
 
 ImageClass bg;
 GameTextures* gt;
+vector<Building> buildings;
+vector<Enemy> enemies;
+Player* player;
 
 
-void CalculaPonto(Point p, Point &out) {
 
-    GLfloat ponto_novo[4];
-    GLfloat matriz_gl[4][4];
-    int  i;
-
-    glGetFloatv(GL_MODELVIEW_MATRIX,&matriz_gl[0][0]);
-
-    for(i=0; i<4; i++) {
-        ponto_novo[i] = matriz_gl[0][i] * p.x +
-                        matriz_gl[1][i] * p.y +
-                        matriz_gl[2][i] * p.z +
-                        matriz_gl[3][i];
-    }
-    out.x = ponto_novo[0];
-    out.y = ponto_novo[1];
-    out.z = ponto_novo[2];
-
-}
 
 
 void init_textures()
@@ -73,12 +56,55 @@ void init_textures()
 
 }
 
+void init_buildings()
+{
+    auto b1 = Building(BUILD1);
+    b1.position = Point(175,FLOOR_H+10);
+    b1.scale = Point(7,10);
+    buildings.emplace_back(b1);
+
+    auto b2 = Building(BUILD2);
+    b2.position = Point(130,FLOOR_H+10);
+    b2.scale = Point(7,10);
+    buildings.emplace_back(b2);
+
+    auto b3 = Building(BUILD3);
+    b3.position = Point(210,FLOOR_H+10);
+    b3.scale = Point(7,10);
+    buildings.emplace_back(b3);
+
+    auto b4 = Building(BUILD4);
+    b4.position = Point(100,FLOOR_H+10);
+    b4.scale = Point(7,10);
+    buildings.emplace_back(b4);
+
+
+    auto stk = Building(PW_STICK, 0);
+    stk.position = Point(150, FLOOR_H+7);
+    stk.scale = Point(1,7);
+    buildings.emplace_back(stk);
+
+    auto pin = Building(PW_SPIRAL, 0);
+    pin.position = Point(150, FLOOR_H+15);
+    pin.scale = Point(7,7);
+    pin.rotation_incr = 15;
+    buildings.emplace_back(pin);
+}
+
+void init_game_objects()
+{
+    init_buildings();
+    //TODO init enemies
+    player = new Player();
+}
+
 void init()
 {
     //allow transparency
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     init_textures();
+    init_game_objects();
     // Define a cor do fundo da tela (AZUL)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -99,11 +125,11 @@ void animate()
         glutPostRedisplay();
     }
     if (tempo_total > 5.0)
-    {
+    {/*
         cout << "Tempo Acumulado: " << tempo_total << " segundos. ";
         cout << "Nros de Frames sem desenho: " << n_frames << endl;
         cout << "FPS(sem desenho): " << n_frames / tempo_total << endl;
-        tempo_total = 0;
+        */tempo_total = 0;
         n_frames = 0;
     }
 }
@@ -135,81 +161,18 @@ void display(void)
     glClear(GL_COLOR_BUFFER_BIT);
 
     display_background(bg);
+
     if(debug)
-    {
         draw_floor();
-    }
 
-
-    glPushMatrix();
-    glTranslatef ( 80, 80, -1);
-    //glScalef(2*scale,4*scale,1);
-    glScalef(10, 10,1);
-    glRotatef(angle, 0,0,1);
-    glEnable(GL_TEXTURE_2D);
-    glColor3f(1,1,1);
-    //glTranslatef ( -2.0f, 2.0f, -5.0f );
-    glBindTexture (GL_TEXTURE_2D, gt->get(PLAYER));
-    DesenhaCubo();
-
-    glDisable( GL_TEXTURE_2D);
-    glLineWidth(0.5);
-    glColor3f(1,0,0); // R, G, B  [0..1]
-
-    INIT_POSITION.draw();
-
-    glPopMatrix();
-
-    //gt->draw_texture(2);
-
-    glPushMatrix();
-    glRotatef(-30,0,0,1);
-    glPushMatrix();
-    glTranslatef(57.5,30,0);
-    glScalef(5,10,1);
-    glRectf(-1,-1,0,1);
-    glPopMatrix();
-
-    glPushMatrix();
-    glTranslatef(50,50,0);
-    glScalef(10,10,1);
-    glBegin(GL_TRIANGLES);
-    glVertex3f(-1,-1,-1);
-    glVertex3f(0,1,-1);
-    glVertex3f(1,-1,-1);
-    glEnd();
-    glPopMatrix();
-    glPopMatrix();
-
-/*
-
-    for(int i=0; i<binit.size(); i++)
+    // display buildings
+    for(auto & building : buildings)
     {
-        Point p;
-        CalculaPonto(binit[i], p);
-        B[i].x = p.x;
-        B[i].y = p.y;
+        building.draw((*gt), debug);
     }
 
-    glPopMatrix();
-    glLineWidth(0.5);
-    glColor3f(1,0,0); // R, G, B  [0..1]
-    glBegin(GL_LINE_LOOP);
-    for (auto &Vertice : B)
-    {
-        glVertex3f(Vertice.x, Vertice.y, Vertice.z);
-    }
-    glEnd();
+    player->display_health((*gt));
 
-    glLineWidth(0.5);
-    glColor3f(0,0,1); // R, G, B  [0..1]
-    glBegin(GL_LINE_LOOP);
-    for (auto &Vertice : binit)
-    {
-        glVertex3f(Vertice.x, Vertice.y, Vertice.z);
-    }
-    glEnd();
-    //print p1_new e p2_new*/
     glutSwapBuffers();
 }
 
@@ -256,10 +219,14 @@ void keyboard(unsigned char key, int x, int y)
             glutPostRedisplay();
             break;
         case 'a':
-            walk += -1;
+            for(auto & b : buildings)
+            {
+                b.health -= 1;
+            }
+            //walk += -1;
             break;
         case 'd':
-            walk += 1;
+            player->lives -=1;
             break;
         default:
             break;
@@ -272,13 +239,13 @@ void arrow_keys(int a_keys, int x, int y)
     {
         case GLUT_KEY_UP:       // Se pressionar UP
             //glutFullScreen(); // Vai para Full Screen
-            scale += 0.5;
+            //scale += 0.5;
             break;
         case GLUT_KEY_DOWN:     // Se pressionar UP
             // Reposiciona a janela
             //glutPositionWindow(50, 50);
             //glutReshapeWindow(700, 500);
-            scale -= 0.5;
+            //scale -= 0.5;
             break;
         case GLUT_KEY_RIGHT:
             angle -= 1;

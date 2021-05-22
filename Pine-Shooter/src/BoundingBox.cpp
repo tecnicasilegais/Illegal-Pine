@@ -44,3 +44,32 @@ Point BoundingBox::get_max()
 {
     return Coordinates[UPPER_RIGHT];
 }
+
+void BoundingBox::update(BoundingBox& origin)
+{
+    for(int i=0; i<4; i++)
+    {
+        calc_point(origin.Coordinates[i], this->Coordinates[i]);
+    }
+    calc_point(origin.mid, this->mid);
+}
+
+void calc_point(Point& p, Point &out) {
+
+    GLfloat ponto_novo[4];
+    GLfloat matriz_gl[4][4];
+    int  i;
+
+    glGetFloatv(GL_MODELVIEW_MATRIX,&matriz_gl[0][0]);
+
+    for(i=0; i<4; i++) {
+        ponto_novo[i] = matriz_gl[0][i] * p.x +
+                        matriz_gl[1][i] * p.y +
+                        matriz_gl[2][i] * p.z +
+                        matriz_gl[3][i];
+    }
+    out.x = ponto_novo[0];
+    out.y = ponto_novo[1];
+    out.z = ponto_novo[2];
+
+}

@@ -9,13 +9,29 @@
 #include <iostream>
 #include <cmath>
 
+#ifdef WIN32
+
+#include <windows.h>
+#include <GL/glut.h>
+
+#endif
+
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#endif
+
+#ifdef __linux__
+#include <GL/glut.h>
+#include<bits/stdc++.h>
+#endif
+
 
 using namespace std;
 
 class Point
 {
 public:
-    float x, y, z;
+    GLfloat x, y, z;
     Point();
     Point(float x, float y, float z = 0);
     bool operator==(Point other) const;

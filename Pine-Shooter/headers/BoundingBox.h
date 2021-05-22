@@ -41,7 +41,10 @@ public:
     void print();
     Point get_min();
     Point get_max();
+    void update(BoundingBox& origin);
 };
+
+void calc_point(Point &p, Point &out);
 
 
 #endif 
