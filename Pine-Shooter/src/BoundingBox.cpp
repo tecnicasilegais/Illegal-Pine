@@ -37,12 +37,26 @@ void BoundingBox::print()
 
 Point BoundingBox::get_min()
 {
-    return Coordinates[LOWER_LEFT];
+    GLfloat x = mid.x;
+    GLfloat y = mid.y;
+    for(auto &coord : Coordinates)
+    {
+        if(coord.x < x){x = coord.x;}
+        if(coord.y < y){y = coord.y;}
+    }
+    return Point(x,y);
 }
 
 Point BoundingBox::get_max()
 {
-    return Coordinates[UPPER_RIGHT];
+    GLfloat x = mid.x;
+    GLfloat y = mid.y;
+    for(auto &coord : Coordinates)
+    {
+        if(coord.x > x){x = coord.x;}
+        if(coord.y > y){y = coord.y;}
+    }
+    return Point(x,y);
 }
 
 void BoundingBox::update(BoundingBox& origin)
@@ -52,6 +66,7 @@ void BoundingBox::update(BoundingBox& origin)
         calc_point(origin.Coordinates[i], this->Coordinates[i]);
     }
     calc_point(origin.mid, this->mid);
+    calc_point(origin.aim_head, this->aim_head);
 }
 
 void calc_point(Point& p, Point &out) {

@@ -43,6 +43,7 @@ ImageClass bg;
 GameTextures* gt;
 vector<Building> buildings;
 vector<Enemy> enemies;
+vector<Explosion> explosions;
 Player* player;
 
 
@@ -87,7 +88,7 @@ void init_buildings()
     auto pin = Building(PW_SPIRAL, 0);
     pin.position = Point(150, FLOOR_H+15);
     pin.scale = Point(7,7);
-    pin.rotation_incr = 15;
+    pin.rotation_incr = 7.5;
     buildings.emplace_back(pin);
 }
 
@@ -95,7 +96,19 @@ void init_game_objects()
 {
     init_buildings();
     //TODO init enemies
-    player = new Player();
+    player = new Player(PLAYER);
+    player->position = Point(20, FLOOR_H+8, -0.8);
+    player->scale = Point(4, 4.8);
+    player->speed.x = (GLfloat)(ORTHO_X) / O_TIME;
+    player->speed.y = (GLfloat)(ORTHO_Y) / O_TIME;
+    player->rotation_incr = 10;
+
+
+
+    auto e = Explosion(1);
+    e.position = Point(130, FLOOR_H+20, -1);
+    e.scale = Point(5,5);
+    explosions.emplace_back(e);
 }
 
 void init()
@@ -122,6 +135,10 @@ void animate()
     if (accum_delta_t > 1.0 / 30) // fixa a atualizacao da tela em 30
     {
         accum_delta_t = 0;
+        if(player->moving)
+        {
+            player->walk_mru(1.0/30);
+        }
         glutPostRedisplay();
     }
     if (tempo_total > 5.0)
@@ -161,6 +178,7 @@ void display(void)
     glClear(GL_COLOR_BUFFER_BIT);
 
     display_background(bg);
+    player->display_health((*gt));
 
     if(debug)
         draw_floor();
@@ -171,7 +189,12 @@ void display(void)
         building.draw((*gt), debug);
     }
 
-    player->display_health((*gt));
+    player->draw((*gt), debug);
+
+    for(auto & explosion : explosions)
+    {
+        explosion.draw((*gt));
+    }
 
     glutSwapBuffers();
 }
@@ -209,7 +232,6 @@ void keyboard(unsigned char key, int x, int y)
         case '1':
             debug = !debug;
             break;
-
         case 't':
             conta_tempo(3);
             break;
@@ -219,14 +241,16 @@ void keyboard(unsigned char key, int x, int y)
             glutPostRedisplay();
             break;
         case 'a':
-            for(auto & b : buildings)
-            {
-                b.health -= 1;
-            }
-            //walk += -1;
+            player->walk_l();
             break;
         case 'd':
-            player->lives -=1;
+            player->walk_r();
+            break;
+        case 'q': //rotate left
+            player->rotate_l();
+            break;
+        case 'e':
+            player->rotate_r();
             break;
         default:
             break;
@@ -237,21 +261,29 @@ void arrow_keys(int a_keys, int x, int y)
 {
     switch (a_keys)
     {
-        case GLUT_KEY_UP:       // Se pressionar UP
+        case GLUT_KEY_UP:
+            for(auto & b : buildings)
+            {
+                b.health += 1;
+            }
+            player->health +=1;
             //glutFullScreen(); // Vai para Full Screen
-            //scale += 0.5;
             break;
-        case GLUT_KEY_DOWN:     // Se pressionar UP
+        case GLUT_KEY_DOWN:
+            for(auto & b : buildings)
+            {
+                b.health -= 1;
+            }
+            player->health -=1;
             // Reposiciona a janela
             //glutPositionWindow(50, 50);
             //glutReshapeWindow(700, 500);
-            //scale -= 0.5;
             break;
         case GLUT_KEY_RIGHT:
-            angle -= 1;
+            player->walk_r();
             break;
         case GLUT_KEY_LEFT:
-            angle += 1;
+            player->walk_l();
             break;
         default:
             break;

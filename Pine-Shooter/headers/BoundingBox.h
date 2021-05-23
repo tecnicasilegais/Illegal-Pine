@@ -35,6 +35,7 @@ class BoundingBox
 {
     Point Coordinates[4];
     Point mid;
+    Point aim_head = Point(0,1);
 public:
     BoundingBox();
     void draw();

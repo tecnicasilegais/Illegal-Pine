@@ -33,6 +33,7 @@ using namespace std;
 #define ORTHO_Y 130
 #define FLOOR_H 19.6
 #define BB_GL_COLOR glColor3f(1,0,0)
+#define O_TIME 15
 
 #define HORIZONTAL_SPRITE 0
 #define VERTICAL_SPRITE 1
@@ -87,50 +88,59 @@ public:
     BoundingBox bb, root;
     GLfloat rotation;
     GLfloat rotation_incr;
-    Point position;
-    Point scale=Point(1,1);
-    int model;
-    void handle_rotation();
+    Point position, speed;
+    Point scale = Point(1,1);
+    bool active = true;
+    bool moving = false;
+    int model, sprite=0, n_sprites=0, s_orientation;
+    void handle_rotation() const;
+    void walk_mru(double dt, Point& direction);
+    void walk_bezier(double dt);
+    virtual void draw(GameTextures &gt, bool debug);
 };
 
-class Building: public GameObject
-{
+class Building: public GameObject {
 public:
     int health;
-    explicit Building(int model, int n_sprites=3, int s_orientation=VERTICAL_SPRITE);
-    bool is_destroyed() const;
-    void draw(GameTextures &gt, bool debug=false);
-private:
-    int n_sprites, s_orientation;
+    explicit Building(int model, int n_sprites = 3, int s_orientation = VERTICAL_SPRITE);
+    void draw(GameTextures &gt, bool debug) override;
 };
 
 class Player: public GameObject
 {
 public:
-    int direction, speed;
-    int lives = 3;
+    explicit Player(int model);
+    Point aim_direction, move_dir;
+    int health = 3;
+    GLfloat max_rotation = 80.0f;
 
-    void display_health(GameTextures& gt);
+    void display_health(GameTextures& gt) const;
+    void rotate_l();
+    void rotate_r();
+    void walk_mru(double dt);
+    void walk_l();
+    void walk_r();
 };
 
 class Enemy: public GameObject
 {
 public:
-    int direction, speed;
-
-private:
-
+    void walk_mru(double dt);
 };
 
 class Explosion: public GameObject
 {
 public:
+    explicit Explosion(int id);
     int id_target;
+    int slowness = 3;
+    int repetitions = 0;
+    bool ended=false;
+    void draw(GameTextures& gt);
 };
 
 void display_background(ImageClass &bg);
 void draw_floor();
 void draw_square(const Point &min, const Point &max);
-
 
 #endif //PINE_SHOOTER_ENGINE_H

@@ -10,7 +10,7 @@ Point::Point()
     x = y = z = 0;
 }
 
-Point::Point(float x, float y, float z)
+Point::Point(GLfloat x, GLfloat y, GLfloat z)
 {
     this->x = x;
     this->y = y;
@@ -19,28 +19,41 @@ Point::Point(float x, float y, float z)
 
 void Point::print() const
 {
-    cout << "(" << x << ", " << y << ")" << flush;
+    cout << "(" << x << ", " << y << ")" << endl << flush;
 }
 
-void Point::multiply(double x, double y, double z)
-{
-    this->x *= x;
-    this->y *= y;
-    this->z *= z;
-}
-
-void Point::sum(double x, double y, double z)
-{
-    this->x += x;
-    this->y += y;
-    this->z += z;
-}
-
-bool Point::operator==(const Point other) const
+bool Point::operator==(const Point& other) const
 {
     return (x == other.x) && (y == other.y);
 }
-
+bool Point::operator<=(const Point& other) const
+{
+    return (x <= other.x) && (y <= other.y);
+}
+bool Point::operator>=(const Point& other) const
+{
+    return (x >= other.x) && (y >= other.y);
+}
+Point& Point::operator+=(const Point& other)
+{
+    this->x += other.x;
+    this->y += other.y;
+    return *this;
+}
+Point Point::operator*(const Point& other) const
+{
+    Point res;
+    res.x = this->x * other.x;
+    res.y = this->y * other.y;
+    return res;
+}
+Point Point::operator*(const double d) const
+{
+    Point res;
+    res.x = this->x * (GLfloat)d;
+    res.y = this->y *(GLfloat)d;
+    return res;
+}
 Point get_max(Point p1, Point p2)
 {
     Point max;

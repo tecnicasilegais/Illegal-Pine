@@ -33,11 +33,14 @@ class Point
 public:
     GLfloat x, y, z;
     Point();
-    Point(float x, float y, float z = 0);
-    bool operator==(Point other) const;
+    Point(GLfloat x, GLfloat y, GLfloat z = 0);
+    bool operator==(const Point& other) const;
+    bool operator<=(const Point& other) const;
+    bool operator>=(const Point& other) const;
+    Point& operator+=(const Point& other);
+    Point operator*(const Point& other) const;
+    Point operator*(const double d) const;
     void print() const;
-    void multiply(double x, double y, double z);
-    void sum(double x, double y, double z);
 };
 
 Point get_min(Point p1, Point p2);
