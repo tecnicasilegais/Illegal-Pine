@@ -43,7 +43,8 @@ ImageClass bg;
 GameTextures* gt;
 vector<Building> buildings;
 vector<Enemy> enemies;
-vector<Explosion> explosions;
+vector<Explosion> explosions; //maybe use list
+//TODO projectile
 Player* player;
 
 
@@ -92,12 +93,31 @@ void init_buildings()
     buildings.emplace_back(pin);
 }
 
+void init_enemies()
+{
+    auto e1 = Enemy(RAVEN);
+    e1.position = Point(30,FLOOR_H+50);
+    e1.scale = Point(5.5,4);
+    enemies.emplace_back(e1);
+
+    auto e2 = Enemy(OWL);
+    e2.position = Point(100,FLOOR_H+50);
+    e2.scale = Point(5.5,4);
+    enemies.emplace_back(e2);
+
+    auto e3 = Enemy(EAGLE);
+    e3.position = Point(170,FLOOR_H+50);
+    e3.scale = Point(7.6,4);
+    enemies.emplace_back(e3);
+}
+
+
 void init_game_objects()
 {
     init_buildings();
-    //TODO init enemies
+    init_enemies();
     player = new Player(PLAYER);
-    player->position = Point(20, FLOOR_H+8, -0.8);
+    player->position = Point(50, FLOOR_H+20, -0.8);
     player->scale = Point(4, 4.8);
     player->speed.x = (GLfloat)(ORTHO_X) / O_TIME;
     player->speed.y = (GLfloat)(ORTHO_Y) / O_TIME;
@@ -189,12 +209,17 @@ void display(void)
         building.draw((*gt), debug);
     }
 
-    player->draw((*gt), debug);
+    for(auto & enemy : enemies)
+    {
+        enemy.draw((*gt), debug);
+    }
 
+    player->draw((*gt), debug);
+    /*
     for(auto & explosion : explosions)
     {
         explosion.draw((*gt));
-    }
+    }*/
 
     glutSwapBuffers();
 }

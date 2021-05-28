@@ -248,6 +248,11 @@ void Player::walk_r()
     this->moving = true;
 }
 
+Enemy::Enemy(int model)
+{
+    this->model = model;
+    aim_direction = Point(-1,0);
+}
 
 /*
  * draw background using given ImageClass img

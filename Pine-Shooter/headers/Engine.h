@@ -86,8 +86,8 @@ class GameObject
 {
 public:
     BoundingBox bb, root;
-    GLfloat rotation;
-    GLfloat rotation_incr;
+    GLfloat rotation=0;
+    GLfloat rotation_incr=0;
     Point position, speed;
     Point scale = Point(1,1);
     bool active = true;
@@ -125,7 +125,10 @@ public:
 class Enemy: public GameObject
 {
 public:
+    Point aim_direction;
+    explicit Enemy(int model);
     void walk_mru(double dt);
+
 };
 
 class Explosion: public GameObject
