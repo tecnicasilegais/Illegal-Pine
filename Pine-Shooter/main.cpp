@@ -224,6 +224,25 @@ void display(void)
     glutSwapBuffers();
 }
 
+void MainMenu(int op){
+    switch (op)
+    {
+        case 1:
+            delete gt;
+            exit(0);
+    }
+    glutPostRedisplay();
+}
+
+void open_menu()
+{
+    int menu = glutCreateMenu(MainMenu);
+    glutAddMenuEntry("Resume",0);
+    glutAddMenuEntry("Quit",1);
+
+    glutAttachMenu(27);
+}
+
 /**
  * Informa quantos frames se passaram no tempo informado.
  * @param tempo - Tempo em segundos
@@ -252,8 +271,7 @@ void keyboard(unsigned char key, int x, int y)
     switch (key)
     {
         case 27:       //esc
-            delete gt;
-            exit(0);
+            open_menu();
         case '1':
             debug = !debug;
             break;
