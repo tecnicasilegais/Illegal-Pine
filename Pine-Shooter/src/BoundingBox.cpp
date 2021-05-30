@@ -66,7 +66,7 @@ void BoundingBox::update(BoundingBox& origin)
         calc_point(origin.Coordinates[i], this->Coordinates[i]);
     }
     calc_point(origin.mid, this->mid);
-    calc_point(origin.aim_head, this->aim_head);
+    calc_point(origin.projectile_origin, this->projectile_origin);
 }
 
 void calc_point(Point& p, Point &out) {

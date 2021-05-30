@@ -40,18 +40,25 @@ Point& Point::operator+=(const Point& other)
     this->y += other.y;
     return *this;
 }
-Point Point::operator*(const Point& other) const
+Point operator*(const Point& p1, const Point& p2)
 {
     Point res;
-    res.x = this->x * other.x;
-    res.y = this->y * other.y;
+    res.x = p1.x * p2.x;
+    res.y = p2.y * p2.y;
     return res;
 }
-Point Point::operator*(const double d) const
+Point operator*(const Point&p, const double d)
 {
     Point res;
-    res.x = this->x * (GLfloat)d;
-    res.y = this->y *(GLfloat)d;
+    res.x = p.x * (GLfloat)d;
+    res.y = p.y *(GLfloat)d;
+    return res;
+}
+Point operator+(const Point& p1, const Point& p2)
+{
+    Point res;
+    res.x = p1.x + p2.x;
+    res.y = p1.y + p2.y;
     return res;
 }
 Point get_max(Point p1, Point p2)

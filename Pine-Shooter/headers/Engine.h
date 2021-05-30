@@ -25,15 +25,21 @@ using namespace std;
 #include <iostream>
 #include <image_libs/TextureClass.h>
 #include <map>
+#include <tuple>
+#include <cmath>
 #include "Point.h"
 #include "BoundingBox.h"
 
 //Ortho
+
 #define ORTHO_X 240
 #define ORTHO_Y 130
 #define FLOOR_H 19.6
 #define BB_GL_COLOR glColor3f(1,0,0)
 #define O_TIME 15
+#define GRAVITY 40
+#define MIN_STRENGTH 7
+#define MAX_STRENGTH 10
 
 #define HORIZONTAL_SPRITE 0
 #define VERTICAL_SPRITE 1
@@ -69,18 +75,26 @@ using namespace std;
 #define PW_SPIRAL 13
 #define HEALTH 14
 
+struct TexData{
+    GLuint texture;
+    Point proportion;
+};
+
+TexData store_tex(GLuint tex, Point p);
+
 class GameTextures
 {
 private:
-    map<int, GLuint> textures;
+    map<int, TexData> textures;
 public:
     GameTextures();
     void draw_texture(int n);
     void draw_sprite(int n, int orientation, GLfloat sprite, GLfloat total_sprites);
     GLuint get(int n);
+    Point get_proportion(int n);
+    Point get_scaled(int n, GLfloat scale);
 
 };
-
 
 class GameObject
 {
@@ -95,40 +109,7 @@ public:
     int model, sprite=0, n_sprites=0, s_orientation;
     void handle_rotation() const;
     void walk_mru(double dt, Point& direction);
-    void walk_bezier(double dt);
     virtual void draw(GameTextures &gt, bool debug);
-};
-
-class Building: public GameObject {
-public:
-    int health;
-    explicit Building(int model, int n_sprites = 3, int s_orientation = VERTICAL_SPRITE);
-    void draw(GameTextures &gt, bool debug) override;
-};
-
-class Player: public GameObject
-{
-public:
-    explicit Player(int model);
-    Point aim_direction, move_dir;
-    int health = 3;
-    GLfloat max_rotation = 80.0f;
-
-    void display_health(GameTextures& gt) const;
-    void rotate_l();
-    void rotate_r();
-    void walk_mru(double dt);
-    void walk_l();
-    void walk_r();
-};
-
-class Enemy: public GameObject
-{
-public:
-    Point aim_direction;
-    explicit Enemy(int model);
-    void walk_mru(double dt);
-
 };
 
 class Explosion: public GameObject
@@ -142,8 +123,60 @@ public:
     void draw(GameTextures& gt);
 };
 
+class Projectile: public GameObject
+{
+private:
+    Point direction, origin;
+    GLfloat animation;
+public:
+    explicit Projectile(int type, Point pos, Point scale, Point direction, Point speed);
+    void oblique_throw(double dt);
+};
+
+class Building: public GameObject {
+public:
+    int health;
+    explicit Building(int model, Point pos, Point scale, int n_sprites = 3, int s_orientation = VERTICAL_SPRITE);
+    void draw(GameTextures &gt, bool debug) override;
+};
+
+class Player: public GameObject
+{
+private:
+    GLfloat str = MIN_STRENGTH;
+public:
+    explicit Player(int model, Point pos, Point scale);
+    Point move_dir;
+    Point aim = Point(0,1);
+    int health = 3;
+    GLfloat max_rotation = 80.0f;
+    bool aiming = false;
+    void display_health(GameTextures& gt) const;
+    void rotate_l();
+    void rotate_r();
+    void walk_mru(double dt);
+    void walk_l();
+    void walk_r();
+    void increase_str();
+    void decrease_str();
+    Projectile shoot(GameTextures &gt);
+    void draw_aim();
+    void draw(GameTextures &gt, bool debug) override;
+};
+
+class Enemy: public GameObject
+{
+public:
+    explicit Enemy(int model, Point pos, Point scale);
+    void walk_mru(double dt);
+
+};
+
+
 void display_background(ImageClass &bg);
 void draw_floor();
 void draw_square(const Point &min, const Point &max);
-
+vector<Point> enemy_positions();
+Point calc_ob_throw(Point &p, double t, Point &speed, Point &aim);
+Point calc_aim_rotation(Point &p, GLfloat rotation);
 #endif //PINE_SHOOTER_ENGINE_H

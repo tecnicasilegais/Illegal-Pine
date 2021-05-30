@@ -33,10 +33,8 @@ BoundingBox INIT_POSITION;
 
 bool debug = false;
 
-float angle = 0.0;
 double n_frames = 0;
 double tempo_total = 0;
-GLfloat acum = 0;
 
 
 ImageClass bg;
@@ -44,91 +42,70 @@ GameTextures* gt;
 vector<Building> buildings;
 vector<Enemy> enemies;
 vector<Explosion> explosions; //maybe use list
+list<Projectile> projectiles;
+
 //TODO projectile
 Player* player;
-
-
-
-
 
 void init_textures()
 {
     if(!bg.Load(BG_FILE)){exit(666);} //load BG image
     gt = new GameTextures;
-
 }
 
 void init_buildings()
 {
-    auto b1 = Building(BUILD1);
-    b1.position = Point(175,FLOOR_H+10);
-    b1.scale = Point(7,10);
+    auto b1 = Building(BUILD1, Point(175,FLOOR_H+10), Point(7,10));
     buildings.emplace_back(b1);
 
-    auto b2 = Building(BUILD2);
-    b2.position = Point(130,FLOOR_H+10);
-    b2.scale = Point(7,10);
+    auto b2 = Building(BUILD2, Point(130,FLOOR_H+10), Point(7,10));
     buildings.emplace_back(b2);
 
-    auto b3 = Building(BUILD3);
-    b3.position = Point(210,FLOOR_H+10);
-    b3.scale = Point(7,10);
+    auto b3 = Building(BUILD3, Point(210,FLOOR_H+10), Point(7,10));
     buildings.emplace_back(b3);
 
-    auto b4 = Building(BUILD4);
-    b4.position = Point(100,FLOOR_H+10);
-    b4.scale = Point(7,10);
+    auto b4 = Building(BUILD4, Point(100,FLOOR_H+10), Point(7,10));
     buildings.emplace_back(b4);
 
-
-    auto stk = Building(PW_STICK, 0);
-    stk.position = Point(150, FLOOR_H+7);
-    stk.scale = Point(1,7);
+    auto stk = Building(PW_STICK, Point(150, FLOOR_H+7), Point(1,7), 0);
     buildings.emplace_back(stk);
 
-    auto pin = Building(PW_SPIRAL, 0);
-    pin.position = Point(150, FLOOR_H+15);
-    pin.scale = Point(7,7);
+    auto pin = Building(PW_SPIRAL, Point(150, FLOOR_H+15), Point(7,7), 0);
     pin.rotation_incr = 7.5;
     buildings.emplace_back(pin);
 }
 
 void init_enemies()
 {
-    auto e1 = Enemy(RAVEN);
-    e1.position = Point(30,FLOOR_H+50);
-    e1.scale = Point(5.5,4);
-    enemies.emplace_back(e1);
 
-    auto e2 = Enemy(OWL);
-    e2.position = Point(100,FLOOR_H+50);
-    e2.scale = Point(5.5,4);
-    enemies.emplace_back(e2);
+    auto positions = enemy_positions();
+    srand(time(nullptr));
+    for(int i=0; i<12; i++)
+    {
+        auto index = rand() % positions.size();
+        auto pos = positions[index];
+        positions.erase(positions.begin() + index);
 
-    auto e3 = Enemy(EAGLE);
-    e3.position = Point(170,FLOOR_H+50);
-    e3.scale = Point(7.6,4);
-    enemies.emplace_back(e3);
+        int model = 3 + i % 3; // 3 -> EAGLE, 4 -> RAVEN, 5 -> OWL
+
+        auto e = Enemy(model, pos, gt->get_scaled(model, 4));
+        e.moving = true;
+        enemies.emplace_back(e);
+    }
 }
-
 
 void init_game_objects()
 {
     init_buildings();
     init_enemies();
-    player = new Player(PLAYER);
-    player->position = Point(50, FLOOR_H+20, -0.8);
-    player->scale = Point(4, 4.8);
-    player->speed.x = (GLfloat)(ORTHO_X) / O_TIME;
-    player->speed.y = (GLfloat)(ORTHO_Y) / O_TIME;
+    player = new Player(PLAYER, Point(50, FLOOR_H+20, -0.8), gt->get_scaled(PLAYER, 4));
     player->rotation_incr = 10;
 
-
-
     auto e = Explosion(1);
-    e.position = Point(130, FLOOR_H+20, -1);
-    e.scale = Point(5,5);
+    e.position = Point(50, FLOOR_H+20, -1);
+    e.scale = gt->get_scaled(EXPLOSION, 5);
     explosions.emplace_back(e);
+
 }
 
 void init()
@@ -155,6 +132,21 @@ void animate()
     if (accum_delta_t > 1.0 / 30) // fixa a atualizacao da tela em 30
     {
         accum_delta_t = 0;
+        for(auto & enemy : enemies)
+        {
+            if(enemy.moving)
+            {
+                enemy.walk_mru(1.0/30);
+            }
+        }
+        for(auto & proj : projectiles)
+        {
+            if(proj.moving && proj.active)
+            {
+                proj.oblique_throw(1.0/30);
+            }
+        }
+
         if(player->moving)
         {
             player->walk_mru(1.0/30);
@@ -215,11 +207,16 @@ void display(void)
     }
 
     player->draw((*gt), debug);
-    /*
+
+    for(auto & proj : projectiles)
+    {
+        proj.draw((*gt), debug);
+    }
+
     for(auto & explosion : explosions)
     {
         explosion.draw((*gt));
-    }*/
+    }
 
     glutSwapBuffers();
 }
@@ -257,13 +254,14 @@ void keyboard(unsigned char key, int x, int y)
         case '1':
             debug = !debug;
             break;
+        case '2':
+            player->aiming = !player->aiming;
+            break;
         case 't':
             conta_tempo(3);
             break;
         case ' ':
-            acum +=1;
-            if(acum >= 11){acum = 0;}
-            glutPostRedisplay();
+            projectiles.push_back(player->shoot((*gt)));
             break;
         case 'a':
             player->walk_l();
@@ -276,6 +274,12 @@ void keyboard(unsigned char key, int x, int y)
             break;
         case 'e':
             player->rotate_r();
+            break;
+        case 'w':
+            player->increase_str();
+            break;
+        case 's':
+            player->decrease_str();
             break;
         default:
             break;

@@ -35,13 +35,13 @@ class BoundingBox
 {
     Point Coordinates[4];
     Point mid;
-    Point aim_head = Point(0,1);
 public:
     BoundingBox();
     void draw();
     void print();
     Point get_min();
     Point get_max();
+    Point projectile_origin = Point(0, 1);
     void update(BoundingBox& origin);
 };
 

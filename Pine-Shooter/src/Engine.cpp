@@ -1,29 +1,61 @@
 #include "headers/Engine.h"
+/*
+ * creates a TexData instance
+ */
+TexData store_tex(GLuint tex, Point p)
+{
+    TexData t;
+    t.texture = tex;
+    t.proportion = p;
+    return t;
+}
 
 /*
  * Game Texture class and methods
  */
 GameTextures::GameTextures()
 {
-    textures[PLAYER] = LoadTexture(PLAYER_FILE);
-    textures[PLAYER_AMMO] = LoadTexture(PLAYER_AMMO_T);
-    textures[RAVEN] = LoadTexture(RAVEN_T);
-    textures[EAGLE] = LoadTexture(EAGLE_T);
-    textures[OWL] = LoadTexture(OWL_T);
-    textures[ENEMY_AMMO] = LoadTexture(ENEMY_AMMO_T);
-    textures[BUILD1] = LoadTexture(BUILD1_T);
-    textures[BUILD2] = LoadTexture(BUILD2_T);
-    textures[BUILD3] = LoadTexture(BUILD3_T);
-    textures[BUILD4] = LoadTexture(BUILD4_T);
-    textures[PW_STICK] = LoadTexture(PW_STICK_T);
-    textures[PW_SPIRAL] = LoadTexture(PW_SPIRAL_T);
-    textures[EXPLOSION] = LoadTexture(EXPLOSION_T);
-    textures[HEALTH] = LoadTexture(HEALTH_T);
+    textures[PLAYER] = store_tex(LoadTexture(PLAYER_FILE), Point(1, 1.2));
+    textures[PLAYER_AMMO] = store_tex(LoadTexture(PLAYER_AMMO_T), Point(1, 1.407));
+    textures[RAVEN] = store_tex(LoadTexture(RAVEN_T), Point(1.47727, 1));
+    textures[EAGLE] = store_tex(LoadTexture(EAGLE_T), Point(1.47727, 1));
+    textures[OWL] = store_tex(LoadTexture(OWL_T), Point(1.47727, 1));
+    textures[ENEMY_AMMO] = store_tex(LoadTexture(ENEMY_AMMO_T), Point(1, 3.3));
+    textures[BUILD1] = store_tex(LoadTexture(BUILD1_T), Point(1, 1.42857));
+    textures[BUILD2] = store_tex(LoadTexture(BUILD2_T), Point(1, 1.42857));
+    textures[BUILD3] = store_tex(LoadTexture(BUILD3_T), Point(1, 1.42857));
+    textures[BUILD4] = store_tex(LoadTexture(BUILD4_T), Point(1, 1.42857));
+    textures[PW_STICK] = store_tex(LoadTexture(PW_STICK_T), Point(1, 7));
+    textures[PW_SPIRAL] = store_tex(LoadTexture(PW_SPIRAL_T), Point(1,1));
+    textures[EXPLOSION] = store_tex(LoadTexture(EXPLOSION_T), Point(1,1) );
+    textures[HEALTH] = store_tex(LoadTexture(HEALTH_T), Point(5,1));
 }
+/*
+ * Returns the texture
+ * @param n -> texture number
+ */
 GLuint GameTextures::get(int n)
 {
-    return textures[n];
+    return textures[n].texture;
 }
+/*
+ * returns the proportion of a texture
+ * @param n -> texture number
+ */
+Point GameTextures::get_proportion(int n)
+{
+    return textures[n].proportion;
+}
+/*
+ * Returns proportional scale of a texture
+ * @param n -> number of initialized texture
+ * @param scale -> scale to multiply both proportions
+ */
+Point GameTextures::get_scaled(int n, GLfloat scale)
+{
+    return textures[n].proportion * scale;
+}
+
 void GameTextures::draw_texture(int n)
 {
     Point min = Point(0,0);
@@ -31,12 +63,13 @@ void GameTextures::draw_texture(int n)
 
     glColor3f(1,1,1);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture (GL_TEXTURE_2D, textures[n]);
+    glBindTexture (GL_TEXTURE_2D, this->get(n));
 
     draw_square(min, max);
 
     glDisable( GL_TEXTURE_2D);
 }
+
 void GameTextures::draw_sprite(int n, int orientation, GLfloat sprite, GLfloat total_sprites)
 {
     Point min = Point(0,0);
@@ -54,7 +87,7 @@ void GameTextures::draw_sprite(int n, int orientation, GLfloat sprite, GLfloat t
 
     glColor3f(1,1,1);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture (GL_TEXTURE_2D, textures[n]);
+    glBindTexture (GL_TEXTURE_2D, this->get(n));
 
     draw_square(min, max);
 
@@ -78,9 +111,9 @@ void GameObject::draw(GameTextures &gt, bool debug)
 {
     glPushMatrix();
     glTranslatef(position.x, position.y, position.z);
-    glScalef(scale.x, scale.y, 1);
 
     this->handle_rotation();
+    glScalef(scale.x, scale.y, 1);
 
     if(n_sprites > 0)
     {
@@ -111,7 +144,6 @@ void GameObject::walk_mru(double dt, Point& direction)
     Point S;
     S.x = dt * this->speed.x * direction.x;
     this->position.x += S.x;
-    //position += speed * direction * dt;
 }
 /*
  * Building Constructor
@@ -119,11 +151,13 @@ void GameObject::walk_mru(double dt, Point& direction)
  * @param n_sprites Number of sprites in the texture (default = 3)
  * @param s_orientation VERTICAL_SPRITE or HORIZONTAL_SPRITE (default = Vertical)
  */
-Building::Building(int model, int n_sprites, int s_orientation)
+Building::Building(int model, Point pos, Point scale, int n_sprites, int s_orientation)
 {
     this->model = model;
     this->n_sprites = n_sprites;
     this->s_orientation = s_orientation;
+    this->position = pos;
+    this->scale = scale;
     health = 2;
     sprite = health;
     rotation = 0;
@@ -141,17 +175,6 @@ void Building::draw(GameTextures &gt, bool debug)
     }
     sprite = health;
     GameObject::draw(gt, debug);
-}
-
-void Enemy::walk_mru(double dt) {
-    if(bb.get_min() >= Point(ORTHO_X, ORTHO_Y) ||
-       bb.get_max() <= Point(0,0))
-    {
-        cout << "outside limits object" << endl;
-        return;
-    }
-    auto dir = Point(-1,0);
-    GameObject::walk_mru(dt, dir);
 }
 
 Explosion::Explosion(int id)
@@ -183,17 +206,23 @@ void Explosion::draw(GameTextures& gt)
     }
 }
 
-Player::Player(int model)
+Player::Player(int model, Point pos, Point scale)
 {
     this->model = model;
-    aim_direction = Point(0,1);
+    this->position = pos;
+    this->scale = scale;
+    //default speed
+    this->speed.x = (GLfloat)(ORTHO_X) / O_TIME;
+    this->speed.y = (GLfloat)(ORTHO_Y) / O_TIME;
 }
 void Player::display_health(GameTextures& gt) const
 {
     glPushMatrix();
+
     glTranslatef(30,10,-1);
-    glScalef(10,2,1);
-    gt.draw_sprite(14, VERTICAL_SPRITE, (GLfloat)health, 4);
+    auto hs = gt.get_scaled(HEALTH, 2);
+    glScalef(hs.x,hs.y,1);
+    gt.draw_sprite(HEALTH, VERTICAL_SPRITE, (GLfloat)health, 4);
 
     glPopMatrix();
 }
@@ -247,11 +276,100 @@ void Player::walk_r()
     this->move_dir = Point(1,0);
     this->moving = true;
 }
+void Player::increase_str()
+{
+    if(str < MAX_STRENGTH)
+        str+=0.5f;
+}
+void Player::decrease_str()
+{
+    if(str > MIN_STRENGTH)
+        str-=0.5f;
+}
+void Player::draw_aim()
+{
+    auto aim_direction = calc_aim_rotation(aim, rotation);
+    glPushAttrib(GL_ENABLE_BIT);
+    double t=0.0;
+    double DeltaT = 1.0/(300);
+    //cout << "DeltaT: " << DeltaT << endl;
+    BB_GL_COLOR;
+    glLineStipple(1, 0xAAAA);
+    glEnable(GL_LINE_STIPPLE);
+    glBegin(GL_LINE_STRIP);
+    Point P = bb.projectile_origin;
+    Point spd = speed * str;
+    while(P.y > FLOOR_H && P.x >= 0 && P.x <= ORTHO_X)
+    {
+        P = calc_ob_throw(bb.projectile_origin, t, spd, aim_direction);
+        glVertex2f(P.x, P.y);
+        t += DeltaT;
+    }
+    glEnd();
+    glDisable(GL_LINE_STIPPLE);
+    glPopAttrib();
+}
 
-Enemy::Enemy(int model)
+Projectile Player::shoot(GameTextures &gt)
+{
+    auto p = Projectile(PLAYER_AMMO,
+                        bb.projectile_origin,
+                        gt.get_scaled(PLAYER_AMMO, 2),
+                        calc_aim_rotation(aim, rotation),
+                        speed * str);
+    p.moving = true;
+    return p;
+}
+void Player::draw(GameTextures &gt, bool debug)
+{
+    GameObject::draw(gt, debug);
+    if(aiming)
+        draw_aim();
+}
+Enemy::Enemy(int model, Point pos, Point scale)
 {
     this->model = model;
-    aim_direction = Point(-1,0);
+    this->position = pos;
+    this->scale = scale;
+    this->bb.projectile_origin = Point(1, 0);
+    //default speed
+    this->speed.x = (GLfloat)(ORTHO_X) / O_TIME;
+    this->speed.y = (GLfloat)(ORTHO_Y) / O_TIME;
+
+}
+void Enemy::walk_mru(double dt) {
+    //only walks left
+    if(bb.get_max().x <= 0)
+    {
+        //cout << "outside limits object" << endl;
+        position.x = ORTHO_X + (bb.get_max().x - bb.get_min().x);
+        return;
+    }
+    auto dir = Point(-1,0);
+    GameObject::walk_mru(dt, dir);
+}
+
+Projectile::Projectile(int type, Point pos, Point scale, Point direction, Point speed)
+{
+    this->position = pos;
+    this->origin = pos;
+    this->scale = scale;
+    this->model = type;
+    this->animation = 0;
+    this->direction = direction;
+    this->speed = speed;
+}
+void Projectile::oblique_throw(double dt)
+{
+    if(position.y < FLOOR_H ||
+       position.x < 0 || position.x > ORTHO_X)
+    {
+        moving = false;
+        active = false;
+    }
+    animation += dt;
+    // Position = Position0 + speed * time (* direction)
+    this->position = calc_ob_throw(origin, animation, speed, direction);
 }
 
 /*
@@ -300,4 +418,44 @@ void draw_square(const Point &min, const Point &max)
     glTexCoord2f(min.x, max.y);
     glVertex3f(-1.0f, 1.0f, 0.0f);
     glEnd();
+}
+
+vector<Point> enemy_positions()
+{
+    GLfloat hb = 90;
+
+    vector<Point> positions;
+    srand(time(nullptr));
+    for(int i=0; i<3; i++)
+    {
+        GLfloat base_x = 20.0f;
+        for(int j=0; j<4; j++)
+        {
+            auto x = base_x + (GLfloat)(19 + rand() % 45);
+            base_x = x;
+            auto p = Point(x, hb + (GLfloat) (i * 15));
+            positions.emplace_back(p);
+        }
+    }
+    return positions;
+}
+
+Point calc_ob_throw(Point &p, double t, Point &speed, Point &aim)
+{
+    Point Pr;
+    Point S;
+    S.x = t * speed.x * aim.x;
+    S.y = (speed.y * aim.y) * (GLfloat)t - 0.5f * (GRAVITY * pow(t,2));
+    Pr = p + S;
+    return Pr;
+}
+
+Point calc_aim_rotation(Point &p, GLfloat rotation)
+{
+    Point rotated;
+    auto rad = rotation * (M_PI/180);
+    rotated.x = p.x * cos(rad) - p.y * sin(rad);
+    rotated.y = p.y * cos(rad) + p.x * sin(rad);
+
+    return rotated;
 }
