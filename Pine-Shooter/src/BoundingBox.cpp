@@ -67,6 +67,8 @@ void BoundingBox::update(BoundingBox& origin)
     }
     calc_point(origin.mid, this->mid);
     calc_point(origin.projectile_origin, this->projectile_origin);
+    min = this->get_min();
+    max = this->get_max();
 }
 
 void calc_point(Point& p, Point &out) {
@@ -87,4 +89,23 @@ void calc_point(Point& p, Point &out) {
     out.y = ponto_novo[1];
     out.z = ponto_novo[2];
 
+}
+
+bool BoundingBox::collision_detect(BoundingBox &other)
+{
+    if(any_of(other.Coordinates, other.Coordinates+4,
+              [&](Point p){return p <= max && p>= min;})
+              ||
+       any_of(this->Coordinates, this->Coordinates+4,
+                   [&](Point p){return p <= other.max && p>= other.min;}))
+    {
+        return true;
+    }
+    return false;
+}
+
+GLfloat z_vector_product(Point &v1, Point &v2)
+{
+    GLfloat res = v1.x * v2.y - (v1.y * v2.x);
+    return res;
 }

@@ -94,6 +94,11 @@ void GameTextures::draw_sprite(int n, int orientation, GLfloat sprite, GLfloat t
     glDisable( GL_TEXTURE_2D);
 }
 
+bool GameObject::collided(GameObject &other)
+{
+    return bb.collision_detect(other.bb);
+}
+
 /*
  * Handles a GameObject sequential rotation
  * Increments the rotation everytime it gets displayed
@@ -163,6 +168,19 @@ Building::Building(int model, Point pos, Point scale, int n_sprites, int s_orien
     rotation = 0;
     rotation_incr = 0;
 }
+bool Building::collided(GameObject &other)
+{
+    auto c = GameObject::collided(other);
+    if(c)
+    {
+        health -= 1;
+        if(health == 0)
+        {
+            active = false;
+        }
+    }
+    return c;
+}
 void Building::draw(GameTextures &gt, bool debug)
 {
     if(rotation_incr > 0)
@@ -177,10 +195,10 @@ void Building::draw(GameTextures &gt, bool debug)
     GameObject::draw(gt, debug);
 }
 
-Explosion::Explosion(int id)
+Explosion::Explosion(Point position)
 {
+    this->position = position;
     model = EXPLOSION;
-    id_target = id;
     s_orientation = HORIZONTAL_SPRITE;
     n_sprites = 12;
     sprite = 0;
@@ -288,7 +306,7 @@ void Player::decrease_str()
 }
 void Player::draw_aim()
 {
-    auto aim_direction = calc_aim_rotation(aim, rotation);
+    auto aim_direction = adjust_aim(aim, rotation);
     glPushAttrib(GL_ENABLE_BIT);
     double t=0.0;
     double DeltaT = 1.0/(300);
@@ -315,7 +333,7 @@ Projectile Player::shoot(GameTextures &gt)
     auto p = Projectile(PLAYER_AMMO,
                         bb.projectile_origin,
                         gt.get_scaled(PLAYER_AMMO, 2),
-                        calc_aim_rotation(aim, rotation),
+                        adjust_aim(aim, rotation),
                         speed * str);
     p.moving = true;
     return p;
@@ -450,7 +468,7 @@ Point calc_ob_throw(Point &p, double t, Point &speed, Point &aim)
     return Pr;
 }
 
-Point calc_aim_rotation(Point &p, GLfloat rotation)
+Point adjust_aim(Point &p, GLfloat rotation)
 {
     Point rotated;
     auto rad = rotation * (M_PI/180);

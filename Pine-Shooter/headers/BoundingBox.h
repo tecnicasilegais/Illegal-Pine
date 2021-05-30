@@ -18,7 +18,7 @@ using namespace std;
 #endif
 
 #ifdef __linux__
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include<bits/stdc++.h>
 #endif
 
@@ -42,10 +42,24 @@ public:
     Point get_min();
     Point get_max();
     Point projectile_origin = Point(0, 1);
+    Point min, max;
     void update(BoundingBox& origin);
+/*
+ * Uses simple bounding box logic
+ */
+    bool collision_detect(BoundingBox &other);
+/*
+ * vector product
+ * use for rotated objects
+ */
+    bool rotated_collision_detect(BoundingBox &other);
 };
 
 void calc_point(Point &p, Point &out);
 
-
+/*
+ * calculates Z of vector product.
+ * This is the only result needed for collision detection
+ */
+GLfloat z_vector_product(Point &v1, Point &v2);
 #endif 

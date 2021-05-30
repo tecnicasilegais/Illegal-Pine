@@ -14,7 +14,7 @@ using namespace std;
 #endif
 
 #ifdef __linux__
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #endif
 
 #include <iostream>
@@ -36,12 +36,19 @@ bool debug = false;
 double n_frames = 0;
 double tempo_total = 0;
 
+int active_buildings;
+int alive_enemies;
+int spin_hits = 0;
+bool game_over = false;
+
+GLfloat win_animation_time = 0.0f;
+GLfloat total_animation_time = 4.0f;
 
 ImageClass bg;
 GameTextures* gt;
 vector<Building> buildings;
 vector<Enemy> enemies;
-vector<Explosion> explosions; //maybe use list
+list<Explosion> explosions; //maybe use list
 list<Projectile> projectiles;
 
 //TODO projectile
@@ -67,10 +74,14 @@ void init_buildings()
     auto b4 = Building(BUILD4, Point(100,FLOOR_H+10), Point(7,10));
     buildings.emplace_back(b4);
 
+    active_buildings = buildings.size(); //next two are indestructible
+
     auto stk = Building(PW_STICK, Point(150, FLOOR_H+7), Point(1,7), 0);
+    stk.health = -1; //infinite health
     buildings.emplace_back(stk);
 
     auto pin = Building(PW_SPIRAL, Point(150, FLOOR_H+15), Point(7,7), 0);
+    pin.health = -1; //infinite health
     pin.rotation_incr = 7.5;
     buildings.emplace_back(pin);
 }
@@ -92,6 +103,7 @@ void init_enemies()
         e.moving = true;
         enemies.emplace_back(e);
     }
+    alive_enemies = enemies.size();
 }
 
 void init_game_objects()
@@ -100,12 +112,112 @@ void init_game_objects()
     init_enemies();
     player = new Player(PLAYER, Point(50, FLOOR_H+20, -0.8), gt->get_scaled(PLAYER, 4));
     player->rotation_incr = 10;
+}
 
-    auto e = Explosion(1);
-    e.position = Point(50, FLOOR_H+20, -1);
-    e.scale = gt->get_scaled(EXPLOSION, 5);
-    explosions.emplace_back(e);
+void explode_here(Point position)
+{
+    auto ex = Explosion(position);
+    ex.scale = gt->get_scaled(EXPLOSION, 5);
+    explosions.emplace_back(ex);
+}
 
+//remove inactive enemies and projectiles
+void clean()
+{
+    auto end = remove_if(
+            enemies.begin(),
+            enemies.end(),
+            [](Enemy const &e)
+            {
+                return !e.active;
+            });
+    enemies.erase(end, enemies.end());
+
+    auto itr = projectiles.cbegin();
+
+    while(itr != projectiles.cend())
+    {
+        auto curr = itr++;
+        if(!curr->active)
+        {
+            projectiles.erase(curr);
+        }
+    }
+}
+
+void handle_collisions()
+{
+    for(auto &p : projectiles)
+    {
+        //todo verify player collision
+
+        if(p.model == PLAYER_AMMO)
+        {
+            for(auto &enemy : enemies)
+            {
+                if(enemy.active && enemy.collided(p))
+                {
+                    enemy.active = false;
+                    p.active = false;
+                    alive_enemies--;
+                    explode_here(enemy.position);
+                    continue;
+                }
+            }
+        }
+        for(auto &build : buildings)
+        {
+            if(build.active && build.collided(p))
+            {
+                p.active = false;
+                if(!build.active)//died
+                    active_buildings--;
+                explode_here(build.position);
+                continue;
+            }
+        }
+    }
+    clean();
+}
+
+void start_end_animation()
+{
+    if(!game_over)
+    {
+        player->position = Point((GLfloat)ORTHO_X/2, (GLfloat)ORTHO_Y/2);
+        player->rotation = 0;
+        game_over = true;
+    }
+}
+
+void win_animation(GLfloat t)
+{
+    win_animation_time += t;
+    if(win_animation_time < total_animation_time)
+    {
+        player->scale += gt->get_scaled(player->model, 0.5);
+    }
+}
+
+bool win_criteria()
+{
+    if(alive_enemies == 0)
+    {
+        debug = false;
+        player->aiming = false;
+        start_end_animation();
+        return true;
+    }
+    return false;
+}
+bool lose_criteria()
+{
+    if(active_buildings == 0 || player->health == 0)
+    {
+        game_over = true;
+        return true;
+    }
+    return false;
 }
 
 void init()
@@ -132,6 +244,19 @@ void animate()
     if (accum_delta_t > 1.0 / 30) // fixa a atualizacao da tela em 30
     {
         accum_delta_t = 0;
+
+        if(!lose_criteria())
+        {
+            if(win_criteria())
+            {
+                win_animation(1.0f/30);
+            }
+            else
+            {
+                handle_collisions();
+            }
+        }
+
         for(auto & enemy : enemies)
         {
             if(enemy.moving)
@@ -151,6 +276,7 @@ void animate()
         {
             player->walk_mru(1.0/30);
         }
+
         glutPostRedisplay();
     }
     if (tempo_total > 5.0)
@@ -218,6 +344,23 @@ void display(void)
         explosion.draw((*gt));
     }
 
+    if(game_over)
+    {
+        glPushMatrix();
+        glRasterPos2f((GLfloat)ORTHO_X/2, (GLfloat)ORTHO_Y/2);
+        glColor3f(0,0,0);
+        glScalef(0.3,0.3,1);
+        if(lose_criteria())
+        {
+            glutStrokeString(GLUT_STROKE_ROMAN, (unsigned char*) "YOU LOSE!");
+        }
+        else if(win_animation_time >= total_animation_time)
+        {
+            glutStrokeString(GLUT_STROKE_ROMAN, (unsigned char*) "YOU WIN!");
+        }
+        glPopMatrix();
+    }
+
     glutSwapBuffers();
 }
 
@@ -246,43 +389,54 @@ void conta_tempo(double tempo)
 
 void keyboard(unsigned char key, int x, int y)
 {
-    switch (key)
+    if(win_criteria() || lose_criteria())
     {
-        case 27:       //esc
+        if(key == 27)
+        {
             delete gt;
             exit(0);
-        case '1':
-            debug = !debug;
-            break;
-        case '2':
-            player->aiming = !player->aiming;
-            break;
-        case 't':
-            conta_tempo(3);
-            break;
-        case ' ':
-            projectiles.push_back(player->shoot((*gt)));
-            break;
-        case 'a':
-            player->walk_l();
-            break;
-        case 'd':
-            player->walk_r();
-            break;
-        case 'q': //rotate left
-            player->rotate_l();
-            break;
-        case 'e':
-            player->rotate_r();
-            break;
-        case 'w':
-            player->increase_str();
-            break;
-        case 's':
-            player->decrease_str();
-            break;
-        default:
-            break;
+        }
+    }
+    else
+    {
+        switch (key)
+        {
+            case 27:       //esc
+                delete gt;
+                exit(0);
+            case '1':
+                debug = !debug;
+                break;
+            case '2':
+                player->aiming = !player->aiming;
+                break;
+            case 't':
+                conta_tempo(3);
+                break;
+            case ' ':
+                projectiles.push_back(player->shoot((*gt)));
+                break;
+            case 'a':
+                player->walk_l();
+                break;
+            case 'd':
+                player->walk_r();
+                break;
+            case 'q': //rotate left
+                player->rotate_l();
+                break;
+            case 'e':
+                player->rotate_r();
+                break;
+            case 'w':
+                player->increase_str();
+                break;
+            case 's':
+                player->decrease_str();
+                break;
+            default:
+                break;
+        }
     }
 }
 
@@ -291,28 +445,18 @@ void arrow_keys(int a_keys, int x, int y)
     switch (a_keys)
     {
         case GLUT_KEY_UP:
-            for(auto & b : buildings)
-            {
-                b.health += 1;
-            }
-            player->health +=1;
             //glutFullScreen(); // Vai para Full Screen
             break;
         case GLUT_KEY_DOWN:
-            for(auto & b : buildings)
-            {
-                b.health -= 1;
-            }
-            player->health -=1;
             // Reposiciona a janela
             //glutPositionWindow(50, 50);
             //glutReshapeWindow(700, 500);
             break;
         case GLUT_KEY_RIGHT:
-            player->walk_r();
+            //player->walk_r();
             break;
         case GLUT_KEY_LEFT:
-            player->walk_l();
+            //player->walk_l();
             break;
         default:
             break;

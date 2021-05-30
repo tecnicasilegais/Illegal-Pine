@@ -21,7 +21,7 @@
 #endif
 
 #ifdef __linux__
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include<bits/stdc++.h>
 #endif
 

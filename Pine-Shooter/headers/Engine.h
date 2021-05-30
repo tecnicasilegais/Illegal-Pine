@@ -9,7 +9,7 @@
 #ifdef WIN32
 
 #include <windows.h>
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 
 #endif
 
@@ -18,7 +18,7 @@
 #endif
 
 #ifdef __linux__
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #endif
 using namespace std;
 
@@ -107,6 +107,7 @@ public:
     bool active = true;
     bool moving = false;
     int model, sprite=0, n_sprites=0, s_orientation;
+    virtual bool collided(GameObject &other);
     void handle_rotation() const;
     void walk_mru(double dt, Point& direction);
     virtual void draw(GameTextures &gt, bool debug);
@@ -115,8 +116,7 @@ public:
 class Explosion: public GameObject
 {
 public:
-    explicit Explosion(int id);
-    int id_target;
+    explicit Explosion(Point position);
     int slowness = 3;
     int repetitions = 0;
     bool ended=false;
@@ -138,6 +138,7 @@ public:
     int health;
     explicit Building(int model, Point pos, Point scale, int n_sprites = 3, int s_orientation = VERTICAL_SPRITE);
     void draw(GameTextures &gt, bool debug) override;
+    bool collided(GameObject &other) override;
 };
 
 class Player: public GameObject
@@ -169,7 +170,6 @@ class Enemy: public GameObject
 public:
     explicit Enemy(int model, Point pos, Point scale);
     void walk_mru(double dt);
-
 };
 
 
@@ -178,5 +178,5 @@ void draw_floor();
 void draw_square(const Point &min, const Point &max);
 vector<Point> enemy_positions();
 Point calc_ob_throw(Point &p, double t, Point &speed, Point &aim);
-Point calc_aim_rotation(Point &p, GLfloat rotation);
+Point adjust_aim(Point &p, GLfloat rotation);
 #endif //PINE_SHOOTER_ENGINE_H
