@@ -29,6 +29,8 @@ GameTextures::GameTextures()
     textures[PW_SPIRAL] = store_tex(LoadTexture(PW_SPIRAL_T), Point(1,1));
     textures[EXPLOSION] = store_tex(LoadTexture(EXPLOSION_T), Point(1,1) );
     textures[HEALTH] = store_tex(LoadTexture(HEALTH_T), Point(5,1));
+    textures[MSG_WIN] = store_tex(LoadTexture(MSG_WIN_T), Point(1,1));
+    textures[MSG_LOSE] = store_tex(LoadTexture(MSG_LOSE_T), Point(1,1));
 }
 /*
  * Returns the texture
@@ -150,6 +152,14 @@ void GameObject::walk_mru(double dt, Point& direction)
     S.x = dt * this->speed.x * direction.x;
     this->position.x += S.x;
 }
+
+Message::Message(int model, Point position, Point scale)
+{
+    this->model = model;
+    this->position = position;
+    this->scale = scale;
+}
+
 /*
  * Building Constructor
  * @param model Number of the model stored in GameTextures

@@ -62,6 +62,8 @@ using namespace std;
 #define OWL_T "img/owl.png"
 #define ENEMY_AMMO_T "img/bird_poop.png"
 #define HEALTH_T "img/life.png"
+#define MSG_WIN_T "img/win.png"
+#define MSG_LOSE_T "img/lose.png"
 
 #define PLAYER 1
 #define PLAYER_AMMO 2
@@ -77,6 +79,8 @@ using namespace std;
 #define PW_STICK 12
 #define PW_SPIRAL 13
 #define HEALTH 14
+#define MSG_WIN 15
+#define MSG_LOSE 16
 
 struct TexData{
     GLuint texture;
@@ -114,6 +118,12 @@ public:
     void handle_rotation() const;
     void walk_mru(double dt, Point& direction);
     virtual void draw(GameTextures &gt, bool debug);
+};
+
+class Message: public GameObject
+{
+public:
+    explicit Message(int model, Point position, Point scale);
 };
 
 class Explosion: public GameObject
