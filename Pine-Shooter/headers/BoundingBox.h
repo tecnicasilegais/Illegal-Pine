@@ -35,6 +35,8 @@ class BoundingBox
 {
     Point Coordinates[4];
     Point mid;
+private:
+    bool test_point(Point &p);
 public:
     BoundingBox();
     void draw();
@@ -47,7 +49,7 @@ public:
 /*
  * Uses simple bounding box logic
  */
-    bool collision_detect(BoundingBox &other);
+    bool collision_detect(BoundingBox &other, Point &coll_pos);
 /*
  * vector product
  * use for rotated objects
@@ -56,10 +58,5 @@ public:
 };
 
 void calc_point(Point &p, Point &out);
-
-/*
- * calculates Z of vector product.
- * This is the only result needed for collision detection
- */
-GLfloat z_vector_product(Point &v1, Point &v2);
+int polar_angle(Point &p, Point &q, Point &r);
 #endif 

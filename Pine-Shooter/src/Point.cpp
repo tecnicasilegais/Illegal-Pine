@@ -40,6 +40,12 @@ Point& Point::operator+=(const Point& other)
     this->y += other.y;
     return *this;
 }
+Point& Point::operator-=(const Point& other)
+{
+    this->x -= other.x;
+    this->y -= other.y;
+    return *this;
+}
 Point operator*(const Point& p1, const Point& p2)
 {
     Point res;
@@ -59,6 +65,13 @@ Point operator+(const Point& p1, const Point& p2)
     Point res;
     res.x = p1.x + p2.x;
     res.y = p1.y + p2.y;
+    return res;
+}
+Point operator-(const Point& p1, const Point& p2)
+{
+    Point res;
+    res.x = p1.x - p2.x;
+    res.y = p1.y - p2.y;
     return res;
 }
 Point get_max(Point p1, Point p2)

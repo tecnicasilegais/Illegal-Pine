@@ -41,6 +41,9 @@ using namespace std;
 #define MIN_STRENGTH 7
 #define MAX_STRENGTH 10
 
+#define MIN_ESHOOT 3
+#define MAX_ESHOOT 10
+
 #define HORIZONTAL_SPRITE 0
 #define VERTICAL_SPRITE 1
 
@@ -107,7 +110,7 @@ public:
     bool active = true;
     bool moving = false;
     int model, sprite=0, n_sprites=0, s_orientation;
-    virtual bool collided(GameObject &other);
+    virtual bool collided(GameObject &other, Point &coll_pos);
     void handle_rotation() const;
     void walk_mru(double dt, Point& direction);
     virtual void draw(GameTextures &gt, bool debug);
@@ -127,8 +130,9 @@ class Projectile: public GameObject
 {
 private:
     Point direction, origin;
-    GLfloat animation;
+    GLfloat animation = 0;
 public:
+    Projectile();
     explicit Projectile(int type, Point pos, Point scale, Point direction, Point speed);
     void oblique_throw(double dt);
 };
@@ -138,7 +142,7 @@ public:
     int health;
     explicit Building(int model, Point pos, Point scale, int n_sprites = 3, int s_orientation = VERTICAL_SPRITE);
     void draw(GameTextures &gt, bool debug) override;
-    bool collided(GameObject &other) override;
+    bool collided(GameObject &other, Point &coll_pos) override;
 };
 
 class Player: public GameObject
@@ -163,13 +167,19 @@ public:
     Projectile shoot(GameTextures &gt);
     void draw_aim();
     void draw(GameTextures &gt, bool debug) override;
+    bool collided(GameObject &other);
 };
 
 class Enemy: public GameObject
 {
 public:
+    GLfloat str = 2;
+    Point aim = Point(-1,1);
+    GLfloat acum = 0;
+    GLfloat shoot_time;
     explicit Enemy(int model, Point pos, Point scale);
     void walk_mru(double dt);
+    bool shoot(double dt, GameTextures &gt, Projectile &p);
 };
 
 

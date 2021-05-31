@@ -94,9 +94,9 @@ void GameTextures::draw_sprite(int n, int orientation, GLfloat sprite, GLfloat t
     glDisable( GL_TEXTURE_2D);
 }
 
-bool GameObject::collided(GameObject &other)
+bool GameObject::collided(GameObject &other, Point &coll_pos)
 {
-    return bb.collision_detect(other.bb);
+    return bb.collision_detect(other.bb, coll_pos);
 }
 
 /*
@@ -168,9 +168,9 @@ Building::Building(int model, Point pos, Point scale, int n_sprites, int s_orien
     rotation = 0;
     rotation_incr = 0;
 }
-bool Building::collided(GameObject &other)
+bool Building::collided(GameObject &other, Point &coll_pos)
 {
-    auto c = GameObject::collided(other);
+    auto c = GameObject::collided(other, coll_pos);
     if(c)
     {
         health -= 1;
@@ -327,6 +327,21 @@ void Player::draw_aim()
     glDisable(GL_LINE_STIPPLE);
     glPopAttrib();
 }
+bool Player::collided(GameObject &other)
+{
+    Point p;
+    auto c = //bb.collision_detect(other.bb, p);
+            bb.rotated_collision_detect(other.bb);
+    if(c)
+    {
+        health -=1;
+        if(health <=0)
+        {
+            active = false;
+        }
+    }
+    return c;
+}
 
 Projectile Player::shoot(GameTextures &gt)
 {
@@ -335,7 +350,6 @@ Projectile Player::shoot(GameTextures &gt)
                         gt.get_scaled(PLAYER_AMMO, 2),
                         adjust_aim(aim, rotation),
                         speed * str);
-    p.moving = true;
     return p;
 }
 void Player::draw(GameTextures &gt, bool debug)
@@ -353,6 +367,7 @@ Enemy::Enemy(int model, Point pos, Point scale)
     //default speed
     this->speed.x = (GLfloat)(ORTHO_X) / O_TIME;
     this->speed.y = (GLfloat)(ORTHO_Y) / O_TIME;
+    shoot_time = MIN_ESHOOT + rand() % (MAX_ESHOOT - MIN_ESHOOT);
 
 }
 void Enemy::walk_mru(double dt) {
@@ -366,6 +381,22 @@ void Enemy::walk_mru(double dt) {
     auto dir = Point(-1,0);
     GameObject::walk_mru(dt, dir);
 }
+bool Enemy::shoot(double dt, GameTextures &gt, Projectile &p)
+{
+    acum += (GLfloat)dt;
+    if(acum >= shoot_time)
+    {
+        p = Projectile(ENEMY_AMMO,
+                            bb.projectile_origin,
+                            gt.get_scaled(ENEMY_AMMO, 1.5),
+                            adjust_aim(aim, rotation),
+                            speed*str);
+        acum = 0;
+        shoot_time = MIN_ESHOOT + rand() % (MAX_ESHOOT - MIN_ESHOOT);
+        return true;
+    }
+    return false;
+}
 
 Projectile::Projectile(int type, Point pos, Point scale, Point direction, Point speed)
 {
@@ -373,7 +404,7 @@ Projectile::Projectile(int type, Point pos, Point scale, Point direction, Point 
     this->origin = pos;
     this->scale = scale;
     this->model = type;
-    this->animation = 0;
+    this->moving = true;
     this->direction = direction;
     this->speed = speed;
 }
@@ -389,6 +420,8 @@ void Projectile::oblique_throw(double dt)
     // Position = Position0 + speed * time (* direction)
     this->position = calc_ob_throw(origin, animation, speed, direction);
 }
+
+Projectile::Projectile()=default;
 
 /*
  * draw background using given ImageClass img

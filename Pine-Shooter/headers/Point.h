@@ -38,12 +38,14 @@ public:
     bool operator<=(const Point& other) const;
     bool operator>=(const Point& other) const;
     Point& operator+=(const Point& other);
+    Point& operator-=(const Point& other);
     void print() const;
 };
 
 Point operator*(const Point& p2);
 Point operator*(const Point& p, const double d);
 Point operator+(const Point& p1, const Point& p2);
+Point operator-(const Point& p1, const Point& p2);
 Point get_min(Point p1, Point p2);
 Point get_max(Point p1, Point p2);
 

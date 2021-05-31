@@ -39,9 +39,11 @@ double tempo_total = 0;
 int active_buildings;
 int alive_enemies;
 int spin_hits = 0;
-bool game_over = false;
 
-GLfloat win_animation_time = 0.0f;
+bool game_over = false;
+bool win;
+
+GLfloat end_animation_time = 0.0f;
 GLfloat total_animation_time = 4.0f;
 
 ImageClass bg;
@@ -149,31 +151,42 @@ void handle_collisions()
 {
     for(auto &p : projectiles)
     {
-        //todo verify player collision
+        Point collision_position;
+        if(p.model == ENEMY_AMMO && p.active)
+        {
+            if(player->collided(p))
+            {
+                p.active = false;
+                explode_here(p.position);
+            }
+        }
 
-        if(p.model == PLAYER_AMMO)
+        if(p.model == PLAYER_AMMO && p.active)
         {
             for(auto &enemy : enemies)
             {
-                if(enemy.active && enemy.collided(p))
+                if(enemy.active && enemy.collided(p, collision_position))
                 {
                     enemy.active = false;
                     p.active = false;
                     alive_enemies--;
-                    explode_here(enemy.position);
-                    continue;
+                    explode_here(collision_position);
+                    break;
                 }
             }
         }
-        for(auto &build : buildings)
+        if(p.active)
         {
-            if(build.active && build.collided(p))
+            for(auto &build : buildings)
             {
-                p.active = false;
-                if(!build.active)//died
-                    active_buildings--;
-                explode_here(build.position);
-                continue;
+                if(build.active && build.collided(p, collision_position))
+                {
+                    p.active = false;
+                    if(!build.active)//died
+                        active_buildings--;
+                    explode_here(collision_position);
+                    break;
+                }
             }
         }
     }
@@ -185,17 +198,43 @@ void start_end_animation()
     if(!game_over)
     {
         player->position = Point((GLfloat)ORTHO_X/2, (GLfloat)ORTHO_Y/2);
-        player->rotation = 0;
+        if(win)
+        {
+            player->rotation = 0;
+        }
+        else
+        {
+            for(auto & build : buildings)
+            {
+                build.health = 0;
+            }
+            player->scale += gt->get_scaled(player->model, 5);
+            player->rotation = -45;
+        }
         game_over = true;
     }
 }
 
 void win_animation(GLfloat t)
 {
-    win_animation_time += t;
-    if(win_animation_time < total_animation_time)
+    end_animation_time += t;
+    if(end_animation_time < total_animation_time)
     {
         player->scale += gt->get_scaled(player->model, 0.5);
+    }
+}
+
+void lose_animation(GLfloat t)
+{
+    end_animation_time += t;
+    if(end_animation_time < total_animation_time/4)
+    {
+        player->scale -= gt->get_scaled(player->model, 0.2);
+    }
+    srand(time(nullptr));
+    for(int i=0; i<50; i++)
+    {
+        explode_here(Point(10.0f+rand()%ORTHO_X, rand()%ORTHO_Y));
     }
 }
 
@@ -205,6 +244,7 @@ bool win_criteria()
     {
         debug = false;
         player->aiming = false;
+        win = true;
         start_end_animation();
         return true;
     }
@@ -212,9 +252,12 @@ bool win_criteria()
 }
 bool lose_criteria()
 {
-    if(active_buildings == 0 || player->health == 0)
+    if(active_buildings == 0 || player->health <= 0)
     {
-        game_over = true;
+        debug = false;
+        player->aiming = false;
+        win = false;
+        start_end_animation();
         return true;
     }
     return false;
@@ -232,6 +275,15 @@ void init()
 
 }
 
+void handle_enemy_shoot(GLfloat dt, Enemy &enemy)
+{
+    Projectile p;
+    auto s = enemy.shoot(1.0f/30, (*gt), p);
+    if(s)
+    {
+        projectiles.emplace_back(p);
+    }
+}
 
 void animate()
 {
@@ -245,23 +297,28 @@ void animate()
     {
         accum_delta_t = 0;
 
-        if(!lose_criteria())
+        if(lose_criteria())
         {
-            if(win_criteria())
-            {
-                win_animation(1.0f/30);
-            }
-            else
-            {
-                handle_collisions();
-            }
+            lose_animation(1.0f/30);
+        }
+        else if(win_criteria())
+        {
+            win_animation(1.0f/30);
+        }
+        else
+        {
+            handle_collisions();
         }
 
         for(auto & enemy : enemies)
         {
-            if(enemy.moving)
+            if(enemy.active)
             {
-                enemy.walk_mru(1.0/30);
+                if(enemy.moving)
+                {
+                    enemy.walk_mru(1.0/30);
+                }
+                handle_enemy_shoot(1.0/30, enemy);
             }
         }
         for(auto & proj : projectiles)
@@ -310,6 +367,26 @@ void reshape(int w, int h)
     glLoadIdentity();
 }
 
+void draw_game_over() {
+    player->draw((*gt), debug);
+    glPushMatrix();
+    glRasterPos2f((GLfloat)ORTHO_X/2, (GLfloat)ORTHO_Y/2);
+    glColor3f(0,0,0);
+    glScalef(0.3,0.3,1);
+    if(end_animation_time >= total_animation_time)
+    {
+        if(win)
+        {
+            glutStrokeString(GLUT_STROKE_ROMAN, (unsigned char*) "YOU WIN!");
+        }
+        else
+        {
+            glutStrokeString(GLUT_STROKE_ROMAN, (unsigned char*) "YOU LOSE!");
+        }
+    }
+    glPopMatrix();
+}
+
 void display(void)
 {
     // Limpa a tela coma cor de fundo
@@ -346,19 +423,7 @@ void display(void)
 
     if(game_over)
     {
-        glPushMatrix();
-        glRasterPos2f((GLfloat)ORTHO_X/2, (GLfloat)ORTHO_Y/2);
-        glColor3f(0,0,0);
-        glScalef(0.3,0.3,1);
-        if(lose_criteria())
-        {
-            glutStrokeString(GLUT_STROKE_ROMAN, (unsigned char*) "YOU LOSE!");
-        }
-        else if(win_animation_time >= total_animation_time)
-        {
-            glutStrokeString(GLUT_STROKE_ROMAN, (unsigned char*) "YOU WIN!");
-        }
-        glPopMatrix();
+        draw_game_over();
     }
 
     glutSwapBuffers();

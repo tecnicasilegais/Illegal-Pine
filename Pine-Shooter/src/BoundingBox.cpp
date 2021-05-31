@@ -91,21 +91,59 @@ void calc_point(Point& p, Point &out) {
 
 }
 
-bool BoundingBox::collision_detect(BoundingBox &other)
+bool BoundingBox::collision_detect(BoundingBox &other, Point &coll_pos)
 {
-    if(any_of(other.Coordinates, other.Coordinates+4,
-              [&](Point p){return p <= max && p>= min;})
-              ||
-       any_of(this->Coordinates, this->Coordinates+4,
-                   [&](Point p){return p <= other.max && p>= other.min;}))
+    for(auto &p : other.Coordinates)
     {
-        return true;
+        if(p <= max && p >= min)
+        {
+            coll_pos = p;
+            return true;
+        }
+    }
+    for(auto &p : Coordinates)
+    {
+        if(p <= other.max && p >= other.min)
+        {
+            coll_pos = p;
+            return true;
+        }
     }
     return false;
 }
 
-GLfloat z_vector_product(Point &v1, Point &v2)
+bool BoundingBox::test_point(Point &p)
 {
-    GLfloat res = v1.x * v2.y - (v1.y * v2.x);
-    return res;
+    for(int i=0; i<4; i++)
+    {
+        auto aux = (i+1) % 4;
+
+        if(polar_angle(Coordinates[i], Coordinates[aux], p) == 2)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool BoundingBox::rotated_collision_detect(BoundingBox &other)
+{
+    for(auto &p : other.Coordinates)
+    {
+        if(test_point(p))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+int polar_angle(Point &p, Point &q, Point &r)
+{
+    double val = (q.y - p.y) * (r.x - q.x) -
+                 (q.x - p.x) * (r.y - q.y);
+
+    if (val == 0)
+        return 0;
+    return (val > 0) ? 1 : 2;
 }
