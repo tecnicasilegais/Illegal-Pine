@@ -43,6 +43,10 @@ int spin_hits = 0;
 bool game_over = false;
 bool win;
 
+//shoot timers
+bool shooted = false;
+double dt_shoot = 0;
+
 GLfloat end_animation_time = 0.0f;
 GLfloat total_animation_time = 4.0f;
 
@@ -296,6 +300,7 @@ void animate()
     if (accum_delta_t > 1.0 / 30) // fixa a atualizacao da tela em 30
     {
         accum_delta_t = 0;
+        dt_shoot += 1.0/30;
 
         if(lose_criteria())
         {
@@ -309,7 +314,6 @@ void animate()
         {
             handle_collisions();
         }
-
         for(auto & enemy : enemies)
         {
             if(enemy.active)
@@ -335,6 +339,12 @@ void animate()
         }
 
         glutPostRedisplay();
+    }
+    if(dt_shoot > 3.0/30 && shooted)
+    {
+        projectiles.emplace_back(player->shoot((*gt)));
+        shooted = false;
+        dt_shoot = 0;
     }
     if (tempo_total > 5.0)
     {/*
@@ -479,7 +489,7 @@ void keyboard(unsigned char key, int x, int y)
                 conta_tempo(3);
                 break;
             case ' ':
-                projectiles.emplace_back(player->shoot((*gt)));
+                shooted = true;
                 break;
             case 'a':
                 player->walk_l();
