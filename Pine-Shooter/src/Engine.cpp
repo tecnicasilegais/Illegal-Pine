@@ -29,8 +29,8 @@ GameTextures::GameTextures()
     textures[PW_SPIRAL] = store_tex(LoadTexture(PW_SPIRAL_T), Point(1,1));
     textures[EXPLOSION] = store_tex(LoadTexture(EXPLOSION_T), Point(1,1) );
     textures[HEALTH] = store_tex(LoadTexture(HEALTH_T), Point(5,1));
-    textures[MSG_WIN] = store_tex(LoadTexture(MSG_WIN_T), Point(1,1));
-    textures[MSG_LOSE] = store_tex(LoadTexture(MSG_LOSE_T), Point(1,1));
+    textures[MSG_WIN] = store_tex(LoadTexture(MSG_WIN_T), Point(7.8,1));
+    textures[MSG_LOSE] = store_tex(LoadTexture(MSG_LOSE_T), Point(8.7,1));
 }
 /*
  * Returns the texture

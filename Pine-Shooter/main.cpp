@@ -202,8 +202,8 @@ void start_end_animation() {
         if (win)
         {
             msg_end = new Message(MSG_WIN,
-                                  Point((GLfloat) ORTHO_X / 2, (GLfloat) ORTHO_Y / 3),
-                                  gt->get_scaled(MSG_WIN,2.0));
+                                  Point((GLfloat) ORTHO_X / 2, (GLfloat) ORTHO_Y / 4),
+                                  gt->get_scaled(MSG_WIN,4.0));
             player->rotation = 0;
         }
         else
@@ -213,8 +213,8 @@ void start_end_animation() {
                 build.health = 0;
             }
             msg_end = new Message(MSG_LOSE,
-                                  Point((GLfloat) ORTHO_X / 2, (GLfloat) ORTHO_Y / 3),
-                                  gt->get_scaled(MSG_LOSE,2.0));
+                                  Point((GLfloat) ORTHO_X / 2, (GLfloat) ORTHO_Y / 4),
+                                  gt->get_scaled(MSG_LOSE,4.0));
             player->scale += gt->get_scaled(player->model, 5);
             player->rotation = -45;
         }
