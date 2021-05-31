@@ -340,7 +340,7 @@ void animate()
 
         glutPostRedisplay();
     }
-    if(dt_shoot > 3.0/30 && shooted)
+    if(dt_shoot > 8.0/30 && shooted)
     {
         projectiles.emplace_back(player->shoot((*gt)));
         shooted = false;
