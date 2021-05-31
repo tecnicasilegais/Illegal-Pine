@@ -14,7 +14,9 @@ using namespace std;
 #endif
 
 #ifdef __linux__
+
 #include <GL/freeglut.h>
+
 #endif
 
 #include <iostream>
@@ -42,6 +44,7 @@ int spin_hits = 0;
 
 bool game_over = false;
 bool win;
+Message* msg_end;
 
 //shoot timers
 bool shooted = false;
@@ -60,44 +63,42 @@ list<Projectile> projectiles;
 //TODO projectile
 Player* player;
 
-void init_textures()
-{
-    if(!bg.Load(BG_FILE)){exit(666);} //load BG image
+void init_textures() {
+    if (!bg.Load(BG_FILE))
+    { exit(666); } //load BG image
     gt = new GameTextures;
 }
 
-void init_buildings()
-{
-    auto b1 = Building(BUILD1, Point(175,FLOOR_H+10), Point(7,10));
+void init_buildings() {
+    auto b1 = Building(BUILD1, Point(175, FLOOR_H + 10), Point(7, 10));
     buildings.emplace_back(b1);
 
-    auto b2 = Building(BUILD2, Point(130,FLOOR_H+10), Point(7,10));
+    auto b2 = Building(BUILD2, Point(130, FLOOR_H + 10), Point(7, 10));
     buildings.emplace_back(b2);
 
-    auto b3 = Building(BUILD3, Point(210,FLOOR_H+10), Point(7,10));
+    auto b3 = Building(BUILD3, Point(210, FLOOR_H + 10), Point(7, 10));
     buildings.emplace_back(b3);
 
-    auto b4 = Building(BUILD4, Point(100,FLOOR_H+10), Point(7,10));
+    auto b4 = Building(BUILD4, Point(100, FLOOR_H + 10), Point(7, 10));
     buildings.emplace_back(b4);
 
     active_buildings = buildings.size(); //next two are indestructible
 
-    auto stk = Building(PW_STICK, Point(150, FLOOR_H+7), Point(1,7), 0);
+    auto stk = Building(PW_STICK, Point(150, FLOOR_H + 7), Point(1, 7), 0);
     stk.health = -1; //infinite health
     buildings.emplace_back(stk);
 
-    auto pin = Building(PW_SPIRAL, Point(150, FLOOR_H+15), Point(7,7), 0);
+    auto pin = Building(PW_SPIRAL, Point(150, FLOOR_H + 15), Point(7, 7), 0);
     pin.health = -1; //infinite health
     pin.rotation_incr = 7.5;
     buildings.emplace_back(pin);
 }
 
-void init_enemies()
-{
+void init_enemies() {
 
     auto positions = enemy_positions();
     srand(time(nullptr));
-    for(int i=0; i<12; i++)
+    for (int i = 0; i < 12; i++)
     {
         auto index = rand() % positions.size();
         auto pos = positions[index];
@@ -112,64 +113,59 @@ void init_enemies()
     alive_enemies = enemies.size();
 }
 
-void init_game_objects()
-{
+void init_game_objects() {
     init_buildings();
     init_enemies();
-    player = new Player(PLAYER, Point(50, FLOOR_H+20, -0.8), gt->get_scaled(PLAYER, 4));
+    player = new Player(PLAYER, Point(50, FLOOR_H + 20, -0.8), gt->get_scaled(PLAYER, 4));
     player->rotation_incr = 10;
 }
 
-void explode_here(Point position)
-{
+void explode_here(Point position) {
     auto ex = Explosion(position);
     ex.scale = gt->get_scaled(EXPLOSION, 5);
     explosions.emplace_back(ex);
 }
 
 //remove inactive enemies and projectiles
-void clean()
-{
+void clean() {
     auto end = remove_if(
             enemies.begin(),
             enemies.end(),
-            [](Enemy const &e)
-            {
+            [](Enemy const &e) {
                 return !e.active;
             });
     enemies.erase(end, enemies.end());
 
     auto itr = projectiles.cbegin();
 
-    while(itr != projectiles.cend())
+    while (itr != projectiles.cend())
     {
         auto curr = itr++;
-        if(!curr->active)
+        if (!curr->active)
         {
             projectiles.erase(curr);
         }
     }
 }
 
-void handle_collisions()
-{
-    for(auto &p : projectiles)
+void handle_collisions() {
+    for (auto &p : projectiles)
     {
         Point collision_position;
-        if(p.model == ENEMY_AMMO && p.active)
+        if (p.model == ENEMY_AMMO && p.active)
         {
-            if(player->collided(p))
+            if (player->collided(p))
             {
                 p.active = false;
                 explode_here(p.position);
             }
         }
 
-        if(p.model == PLAYER_AMMO && p.active)
+        if (p.model == PLAYER_AMMO && p.active)
         {
-            for(auto &enemy : enemies)
+            for (auto &enemy : enemies)
             {
-                if(enemy.active && enemy.collided(p, collision_position))
+                if (enemy.active && enemy.collided(p, collision_position))
                 {
                     enemy.active = false;
                     p.active = false;
@@ -179,15 +175,17 @@ void handle_collisions()
                 }
             }
         }
-        if(p.active)
+        if (p.active)
         {
-            for(auto &build : buildings)
+            for (auto &build : buildings)
             {
-                if(build.active && build.collided(p, collision_position))
+                if (build.active && build.collided(p, collision_position))
                 {
                     p.active = false;
-                    if(!build.active)//died
+                    if (!build.active)
+                    {//died
                         active_buildings--;
+                    }
                     explode_here(collision_position);
                     break;
                 }
@@ -197,21 +195,26 @@ void handle_collisions()
     clean();
 }
 
-void start_end_animation()
-{
-    if(!game_over)
+void start_end_animation() {
+    if (!game_over)
     {
-        player->position = Point((GLfloat)ORTHO_X/2, (GLfloat)ORTHO_Y/2);
-        if(win)
+        player->position = Point((GLfloat) ORTHO_X / 2, (GLfloat) ORTHO_Y / 2);
+        if (win)
         {
+            msg_end = new Message(MSG_WIN,
+                                  Point((GLfloat) ORTHO_X / 2, (GLfloat) ORTHO_Y / 3),
+                                  gt->get_scaled(MSG_WIN,2.0));
             player->rotation = 0;
         }
         else
         {
-            for(auto & build : buildings)
+            for (auto &build : buildings)
             {
                 build.health = 0;
             }
+            msg_end = new Message(MSG_LOSE,
+                                  Point((GLfloat) ORTHO_X / 2, (GLfloat) ORTHO_Y / 3),
+                                  gt->get_scaled(MSG_LOSE,2.0));
             player->scale += gt->get_scaled(player->model, 5);
             player->rotation = -45;
         }
@@ -219,32 +222,29 @@ void start_end_animation()
     }
 }
 
-void win_animation(GLfloat t)
-{
+void win_animation(GLfloat t) {
     end_animation_time += t;
-    if(end_animation_time < total_animation_time)
+    if (end_animation_time < total_animation_time)
     {
         player->scale += gt->get_scaled(player->model, 0.5);
     }
 }
 
-void lose_animation(GLfloat t)
-{
+void lose_animation(GLfloat t) {
     end_animation_time += t;
-    if(end_animation_time < total_animation_time/4)
+    if (end_animation_time < total_animation_time / 4)
     {
         player->scale -= gt->get_scaled(player->model, 0.2);
     }
     srand(time(nullptr));
-    for(int i=0; i<50; i++)
+    for (int i = 0; i < 50; i++)
     {
-        explode_here(Point(10.0f+rand()%ORTHO_X, rand()%ORTHO_Y));
+        explode_here(Point(10.0f + rand() % ORTHO_X, rand() % ORTHO_Y));
     }
 }
 
-bool win_criteria()
-{
-    if(alive_enemies == 0)
+bool win_criteria() {
+    if (alive_enemies == 0)
     {
         debug = false;
         player->aiming = false;
@@ -254,9 +254,9 @@ bool win_criteria()
     }
     return false;
 }
-bool lose_criteria()
-{
-    if(active_buildings == 0 || player->health <= 0)
+
+bool lose_criteria() {
+    if (active_buildings == 0 || player->health <= 0)
     {
         debug = false;
         player->aiming = false;
@@ -267,8 +267,7 @@ bool lose_criteria()
     return false;
 }
 
-void init()
-{
+void init() {
     //allow transparency
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -279,18 +278,16 @@ void init()
 
 }
 
-void handle_enemy_shoot(GLfloat dt, Enemy &enemy)
-{
+void handle_enemy_shoot(GLfloat dt, Enemy &enemy) {
     Projectile p;
-    auto s = enemy.shoot(1.0f/30, (*gt), p);
-    if(s)
+    auto s = enemy.shoot(1.0f / 30, (*gt), p);
+    if (s)
     {
         projectiles.emplace_back(p);
     }
 }
 
-void animate()
-{
+void animate() {
     double dt;
     dt = T.get_delta_t();
     accum_delta_t += dt;
@@ -300,47 +297,47 @@ void animate()
     if (accum_delta_t > 1.0 / 30) // fixa a atualizacao da tela em 30
     {
         accum_delta_t = 0;
-        dt_shoot += 1.0/30;
+        dt_shoot += 1.0 / 30;
 
-        if(lose_criteria())
+        if (lose_criteria())
         {
-            lose_animation(1.0f/30);
+            lose_animation(1.0f / 30);
         }
-        else if(win_criteria())
+        else if (win_criteria())
         {
-            win_animation(1.0f/30);
+            win_animation(1.0f / 30);
         }
         else
         {
             handle_collisions();
         }
-        for(auto & enemy : enemies)
+        for (auto &enemy : enemies)
         {
-            if(enemy.active)
+            if (enemy.active)
             {
-                if(enemy.moving)
+                if (enemy.moving)
                 {
-                    enemy.walk_mru(1.0/30);
+                    enemy.walk_mru(1.0 / 30);
                 }
-                handle_enemy_shoot(1.0/30, enemy);
+                handle_enemy_shoot(1.0 / 30, enemy);
             }
         }
-        for(auto & proj : projectiles)
+        for (auto &proj : projectiles)
         {
-            if(proj.moving && proj.active)
+            if (proj.moving && proj.active)
             {
-                proj.oblique_throw(1.0/30);
+                proj.oblique_throw(1.0 / 30);
             }
         }
 
-        if(player->moving)
+        if (player->moving)
         {
-            player->walk_mru(1.0/30);
+            player->walk_mru(1.0 / 30);
         }
 
         glutPostRedisplay();
     }
-    if(dt_shoot > 3.0/30 && shooted)
+    if (dt_shoot > 3.0 / 30 && shooted)
     {
         projectiles.emplace_back(player->shoot((*gt)));
         shooted = false;
@@ -361,8 +358,7 @@ void animate()
  * @param w - largura
  * @param h - altura
  */
-void reshape(int w, int h)
-{
+void reshape(int w, int h) {
     // Reset the coordinate system before modifying
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -379,59 +375,48 @@ void reshape(int w, int h)
 
 void draw_game_over() {
     player->draw((*gt), debug);
-    glPushMatrix();
-    glRasterPos2f((GLfloat)ORTHO_X/2, (GLfloat)ORTHO_Y/2);
-    glColor3f(0,0,0);
-    glScalef(0.3,0.3,1);
-    if(end_animation_time >= total_animation_time)
+    if (end_animation_time >= total_animation_time)
     {
-        if(win)
-        {
-            glutStrokeString(GLUT_STROKE_ROMAN, (unsigned char*) "YOU WIN!");
-        }
-        else
-        {
-            glutStrokeString(GLUT_STROKE_ROMAN, (unsigned char*) "YOU LOSE!");
-        }
+        msg_end->draw(*gt, debug);
     }
-    glPopMatrix();
 }
 
-void display(void)
-{
+void display(void) {
     // Limpa a tela coma cor de fundo
     glClear(GL_COLOR_BUFFER_BIT);
 
     display_background(bg);
     player->display_health((*gt));
 
-    if(debug)
+    if (debug)
+    {
         draw_floor();
+    }
 
     // display buildings
-    for(auto & building : buildings)
+    for (auto &building : buildings)
     {
         building.draw((*gt), debug);
     }
 
-    for(auto & enemy : enemies)
+    for (auto &enemy : enemies)
     {
         enemy.draw((*gt), debug);
     }
 
     player->draw((*gt), debug);
 
-    for(auto & proj : projectiles)
+    for (auto &proj : projectiles)
     {
         proj.draw((*gt), debug);
     }
 
-    for(auto & explosion : explosions)
+    for (auto &explosion : explosions)
     {
         explosion.draw((*gt));
     }
 
-    if(game_over)
+    if (game_over)
     {
         draw_game_over();
     }
@@ -443,8 +428,7 @@ void display(void)
  * Informa quantos frames se passaram no tempo informado.
  * @param tempo - Tempo em segundos
  */
-void conta_tempo(double tempo)
-{
+void conta_tempo(double tempo) {
     Temporizador T;
 
     unsigned long cont = 0;
@@ -462,11 +446,10 @@ void conta_tempo(double tempo)
 
 }
 
-void keyboard(unsigned char key, int x, int y)
-{
-    if(win_criteria() || lose_criteria())
+void keyboard(unsigned char key, int x, int y) {
+    if (win_criteria() || lose_criteria())
     {
-        if(key == 27)
+        if (key == 27)
         {
             delete gt;
             exit(0);
@@ -515,8 +498,7 @@ void keyboard(unsigned char key, int x, int y)
     }
 }
 
-void arrow_keys(int a_keys, int x, int y)
-{
+void arrow_keys(int a_keys, int x, int y) {
     switch (a_keys)
     {
         case GLUT_KEY_UP:
@@ -538,8 +520,7 @@ void arrow_keys(int a_keys, int x, int y)
     }
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     cout << "Programa OpenGL" << endl;
 
     glutInit(&argc, argv);
