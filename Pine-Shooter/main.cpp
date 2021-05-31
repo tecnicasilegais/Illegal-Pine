@@ -63,13 +63,15 @@ list<Projectile> projectiles;
 //TODO projectile
 Player* player;
 
-void init_textures() {
+void init_textures()
+{
     if (!bg.Load(BG_FILE))
     { exit(666); } //load BG image
     gt = new GameTextures;
 }
 
-void init_buildings() {
+void init_buildings()
+{
     auto b1 = Building(BUILD1, Point(175, FLOOR_H + 10), Point(7, 10));
     buildings.emplace_back(b1);
 
@@ -94,7 +96,8 @@ void init_buildings() {
     buildings.emplace_back(pin);
 }
 
-void init_enemies() {
+void init_enemies()
+{
 
     auto positions = enemy_positions();
     srand(time(nullptr));
@@ -106,28 +109,31 @@ void init_enemies() {
 
         int model = 3 + i % 3; // 3 -> EAGLE, 4 -> RAVEN, 5 -> OWL
 
-        auto e = Enemy(model, pos, gt->get_scaled(model, 4));
+        auto e = Enemy(model, pos.position, gt->get_scaled(model, 4), pos.speed, pos.direction);
         e.moving = true;
         enemies.emplace_back(e);
     }
     alive_enemies = enemies.size();
 }
 
-void init_game_objects() {
+void init_game_objects()
+{
     init_buildings();
     init_enemies();
     player = new Player(PLAYER, Point(50, FLOOR_H + 20, -0.8), gt->get_scaled(PLAYER, 4));
     player->rotation_incr = 10;
 }
 
-void explode_here(Point position) {
+void explode_here(Point position)
+{
     auto ex = Explosion(position);
     ex.scale = gt->get_scaled(EXPLOSION, 5);
     explosions.emplace_back(ex);
 }
 
 //remove inactive enemies and projectiles
-void clean() {
+void clean()
+{
     auto end = remove_if(
             enemies.begin(),
             enemies.end(),
@@ -148,7 +154,8 @@ void clean() {
     }
 }
 
-void handle_collisions() {
+void handle_collisions()
+{
     for (auto &p : projectiles)
     {
         Point collision_position;
@@ -195,7 +202,8 @@ void handle_collisions() {
     clean();
 }
 
-void start_end_animation() {
+void start_end_animation()
+{
     if (!game_over)
     {
         player->position = Point((GLfloat) ORTHO_X / 2, (GLfloat) ORTHO_Y / 2);
@@ -203,7 +211,7 @@ void start_end_animation() {
         {
             msg_end = new Message(MSG_WIN,
                                   Point((GLfloat) ORTHO_X / 2, (GLfloat) ORTHO_Y / 4),
-                                  gt->get_scaled(MSG_WIN,4.0));
+                                  gt->get_scaled(MSG_WIN, 4.0));
             player->rotation = 0;
         }
         else
@@ -214,7 +222,7 @@ void start_end_animation() {
             }
             msg_end = new Message(MSG_LOSE,
                                   Point((GLfloat) ORTHO_X / 2, (GLfloat) ORTHO_Y / 4),
-                                  gt->get_scaled(MSG_LOSE,4.0));
+                                  gt->get_scaled(MSG_LOSE, 4.0));
             player->scale += gt->get_scaled(player->model, 5);
             player->rotation = -45;
         }
@@ -222,7 +230,8 @@ void start_end_animation() {
     }
 }
 
-void win_animation(GLfloat t) {
+void win_animation(GLfloat t)
+{
     end_animation_time += t;
     if (end_animation_time < total_animation_time)
     {
@@ -230,7 +239,8 @@ void win_animation(GLfloat t) {
     }
 }
 
-void lose_animation(GLfloat t) {
+void lose_animation(GLfloat t)
+{
     end_animation_time += t;
     if (end_animation_time < total_animation_time / 4)
     {
@@ -243,7 +253,8 @@ void lose_animation(GLfloat t) {
     }
 }
 
-bool win_criteria() {
+bool win_criteria()
+{
     if (alive_enemies == 0)
     {
         debug = false;
@@ -255,7 +266,8 @@ bool win_criteria() {
     return false;
 }
 
-bool lose_criteria() {
+bool lose_criteria()
+{
     if (active_buildings == 0 || player->health <= 0)
     {
         debug = false;
@@ -267,7 +279,8 @@ bool lose_criteria() {
     return false;
 }
 
-void init() {
+void init()
+{
     //allow transparency
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -278,7 +291,8 @@ void init() {
 
 }
 
-void handle_enemy_shoot(GLfloat dt, Enemy &enemy) {
+void handle_enemy_shoot(GLfloat dt, Enemy &enemy)
+{
     Projectile p;
     auto s = enemy.shoot(1.0f / 30, (*gt), p);
     if (s)
@@ -287,7 +301,8 @@ void handle_enemy_shoot(GLfloat dt, Enemy &enemy) {
     }
 }
 
-void animate() {
+void animate()
+{
     double dt;
     dt = T.get_delta_t();
     accum_delta_t += dt;
@@ -337,7 +352,7 @@ void animate() {
 
         glutPostRedisplay();
     }
-    if(dt_shoot > 8.0/30 && shooted)
+    if (dt_shoot > 8.0 / 30 && shooted)
     {
         projectiles.emplace_back(player->shoot((*gt)));
         shooted = false;
@@ -358,7 +373,8 @@ void animate() {
  * @param w - largura
  * @param h - altura
  */
-void reshape(int w, int h) {
+void reshape(int w, int h)
+{
     // Reset the coordinate system before modifying
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -373,7 +389,8 @@ void reshape(int w, int h) {
     glLoadIdentity();
 }
 
-void draw_game_over() {
+void draw_game_over()
+{
     player->draw((*gt), debug);
     if (end_animation_time >= total_animation_time)
     {
@@ -381,7 +398,8 @@ void draw_game_over() {
     }
 }
 
-void display(void) {
+void display(void)
+{
     // Limpa a tela coma cor de fundo
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -428,7 +446,8 @@ void display(void) {
  * Informa quantos frames se passaram no tempo informado.
  * @param tempo - Tempo em segundos
  */
-void conta_tempo(double tempo) {
+void conta_tempo(double tempo)
+{
     Temporizador T;
 
     unsigned long cont = 0;
@@ -446,7 +465,8 @@ void conta_tempo(double tempo) {
 
 }
 
-void keyboard(unsigned char key, int x, int y) {
+void keyboard(unsigned char key, int x, int y)
+{
     if (win_criteria() || lose_criteria())
     {
         if (key == 27)
@@ -498,7 +518,8 @@ void keyboard(unsigned char key, int x, int y) {
     }
 }
 
-void arrow_keys(int a_keys, int x, int y) {
+void arrow_keys(int a_keys, int x, int y)
+{
     switch (a_keys)
     {
         case GLUT_KEY_UP:
@@ -520,7 +541,8 @@ void arrow_keys(int a_keys, int x, int y) {
     }
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     cout << "Programa OpenGL" << endl;
 
     glutInit(&argc, argv);

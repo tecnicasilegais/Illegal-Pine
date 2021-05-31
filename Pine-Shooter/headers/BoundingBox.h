@@ -18,8 +18,10 @@ using namespace std;
 #endif
 
 #ifdef __linux__
+
 #include <GL/freeglut.h>
 #include<bits/stdc++.h>
+
 #endif
 
 #include "Point.h"
@@ -45,7 +47,7 @@ public:
     Point get_max();
     Point projectile_origin = Point(0, 1);
     Point min, max;
-    void update(BoundingBox& origin);
+    void update(BoundingBox &origin);
 /*
  * Uses simple bounding box logic
  */

@@ -21,10 +21,11 @@
 #endif
 
 #ifdef __linux__
+
 #include <GL/freeglut.h>
 #include<bits/stdc++.h>
-#endif
 
+#endif
 
 using namespace std;
 
@@ -34,18 +35,18 @@ public:
     GLfloat x, y, z;
     Point();
     Point(GLfloat x, GLfloat y, GLfloat z = 0);
-    bool operator==(const Point& other) const;
-    bool operator<=(const Point& other) const;
-    bool operator>=(const Point& other) const;
-    Point& operator+=(const Point& other);
-    Point& operator-=(const Point& other);
+    bool operator==(const Point &other) const;
+    bool operator<=(const Point &other) const;
+    bool operator>=(const Point &other) const;
+    Point &operator+=(const Point &other);
+    Point &operator-=(const Point &other);
     void print() const;
 };
 
-Point operator*(const Point& p2);
-Point operator*(const Point& p, const double d);
-Point operator+(const Point& p1, const Point& p2);
-Point operator-(const Point& p1, const Point& p2);
+Point operator*(const Point &p2);
+Point operator*(const Point &p, const double d);
+Point operator+(const Point &p1, const Point &p2);
+Point operator-(const Point &p1, const Point &p2);
 Point get_min(Point p1, Point p2);
 Point get_max(Point p1, Point p2);
 

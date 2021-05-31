@@ -18,7 +18,9 @@ using namespace std;
 #include <windows.h>
 
 #else
+
 #include <sys/time.h>
+
 #endif
 
 class Temporizador

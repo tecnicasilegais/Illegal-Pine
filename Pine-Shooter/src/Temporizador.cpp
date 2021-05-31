@@ -33,7 +33,7 @@ double Temporizador::get_delta_t()
     // Figure out time elapsed since last call to idle function
     struct timeval end_time;
     gettimeofday(&end_time, NULL);
-    dt = (float)(end_time.tv_sec - start_time.tv_sec) + 1.0e-6 * (end_time.tv_usec - start_time.tv_usec);
+    dt = (float) (end_time.tv_sec - start_time.tv_sec) + 1.0e-6 * (end_time.tv_usec - start_time.tv_usec);
 #endif
     start_time = end_time;
     return dt;

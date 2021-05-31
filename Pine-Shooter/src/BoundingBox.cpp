@@ -8,7 +8,7 @@ BoundingBox::BoundingBox()
     Coordinates[UPPER_LEFT] = Point(-1, 1);
     Coordinates[UPPER_RIGHT] = Point(1, 1);
     Coordinates[LOWER_RIGHT] = Point(1, -1);
-    mid = Point(0,0);
+    mid = Point(0, 0);
 
 }
 
@@ -39,29 +39,33 @@ Point BoundingBox::get_min()
 {
     GLfloat x = mid.x;
     GLfloat y = mid.y;
-    for(auto &coord : Coordinates)
+    for (auto &coord : Coordinates)
     {
-        if(coord.x < x){x = coord.x;}
-        if(coord.y < y){y = coord.y;}
+        if (coord.x < x)
+        { x = coord.x; }
+        if (coord.y < y)
+        { y = coord.y; }
     }
-    return Point(x,y);
+    return Point(x, y);
 }
 
 Point BoundingBox::get_max()
 {
     GLfloat x = mid.x;
     GLfloat y = mid.y;
-    for(auto &coord : Coordinates)
+    for (auto &coord : Coordinates)
     {
-        if(coord.x > x){x = coord.x;}
-        if(coord.y > y){y = coord.y;}
+        if (coord.x > x)
+        { x = coord.x; }
+        if (coord.y > y)
+        { y = coord.y; }
     }
-    return Point(x,y);
+    return Point(x, y);
 }
 
-void BoundingBox::update(BoundingBox& origin)
+void BoundingBox::update(BoundingBox &origin)
 {
-    for(int i=0; i<4; i++)
+    for (int i = 0; i < 4; i++)
     {
         calc_point(origin.Coordinates[i], this->Coordinates[i]);
     }
@@ -71,15 +75,17 @@ void BoundingBox::update(BoundingBox& origin)
     max = this->get_max();
 }
 
-void calc_point(Point& p, Point &out) {
+void calc_point(Point &p, Point &out)
+{
 
     GLfloat ponto_novo[4];
     GLfloat matriz_gl[4][4];
-    int  i;
+    int i;
 
-    glGetFloatv(GL_MODELVIEW_MATRIX,&matriz_gl[0][0]);
+    glGetFloatv(GL_MODELVIEW_MATRIX, &matriz_gl[0][0]);
 
-    for(i=0; i<4; i++) {
+    for (i = 0; i < 4; i++)
+    {
         ponto_novo[i] = matriz_gl[0][i] * p.x +
                         matriz_gl[1][i] * p.y +
                         matriz_gl[2][i] * p.z +
@@ -93,17 +99,17 @@ void calc_point(Point& p, Point &out) {
 
 bool BoundingBox::collision_detect(BoundingBox &other, Point &coll_pos)
 {
-    for(auto &p : other.Coordinates)
+    for (auto &p : other.Coordinates)
     {
-        if(p <= max && p >= min)
+        if (p <= max && p >= min)
         {
             coll_pos = p;
             return true;
         }
     }
-    for(auto &p : Coordinates)
+    for (auto &p : Coordinates)
     {
-        if(p <= other.max && p >= other.min)
+        if (p <= other.max && p >= other.min)
         {
             coll_pos = p;
             return true;
@@ -114,11 +120,11 @@ bool BoundingBox::collision_detect(BoundingBox &other, Point &coll_pos)
 
 bool BoundingBox::test_point(Point &p)
 {
-    for(int i=0; i<4; i++)
+    for (int i = 0; i < 4; i++)
     {
-        auto aux = (i+1) % 4;
+        auto aux = (i + 1) % 4;
 
-        if(polar_angle(Coordinates[i], Coordinates[aux], p) == 2)
+        if (polar_angle(Coordinates[i], Coordinates[aux], p) == 2)
         {
             return false;
         }
@@ -128,9 +134,9 @@ bool BoundingBox::test_point(Point &p)
 
 bool BoundingBox::rotated_collision_detect(BoundingBox &other)
 {
-    for(auto &p : other.Coordinates)
+    for (auto &p : other.Coordinates)
     {
-        if(test_point(p))
+        if (test_point(p))
         {
             return true;
         }
@@ -144,6 +150,8 @@ int polar_angle(Point &p, Point &q, Point &r)
                  (q.x - p.x) * (r.y - q.y);
 
     if (val == 0)
+    {
         return 0;
+    }
     return (val > 0) ? 1 : 2;
 }
