@@ -479,7 +479,7 @@ void keyboard(unsigned char key, int x, int y)
                 conta_tempo(3);
                 break;
             case ' ':
-                projectiles.push_back(player->shoot((*gt)));
+                projectiles.emplace_back(player->shoot((*gt)));
                 break;
             case 'a':
                 player->walk_l();
